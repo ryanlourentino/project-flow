@@ -7,6 +7,15 @@ Software Engineering in Construction Management - Assignment #2
 | Ryan Lourentino A. | M11505803 |
 | 羅奕展 | M11505505 |
 
+
+## Priority Legend
+
+| Priority | Color | Meaning |
+|---|---|---|
+|  High | Red | Core functions that should be implemented first |
+|  Medium | Yellow | Important functions implemented after the core functions |
+|  Low | Green | Optional or lower-priority functions |
+
 ```mermaid 
 graph LR
 	A[Homepage] --> B(About Us)
