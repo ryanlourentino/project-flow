@@ -65,7 +65,7 @@ graph LR
 	D --> D2(Contact Form)
 
 	%%DefPriority
-	class A,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3,Sup2,Sup3,ER1,ER2,ER3 high;
-	class D,D1,D2 medium;
+	class A,D,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3,Sup2,Sup3,ER1,ER2,ER3 high;
+	class B,D1,D2 medium;
 	class C,C1,C2,CA1,CA2 low;
 ```
