@@ -41,7 +41,6 @@ graph LR
 
 	Co1 --> Pro1(Procurement Team)
 	Co1 --> SE1(Site Engineer)
-	Co1 --> E
 
 	Pro1 --> Pro2(Registration)
 	Pro1 --> Pro3(Login)
