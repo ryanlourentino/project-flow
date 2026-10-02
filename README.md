@@ -18,6 +18,12 @@ Software Engineering in Construction Management - Assignment #2
 
 ```mermaid 
 graph LR
+
+	classDef high fill:#ff4d4f,stroke:#a8071a,stroke-width:2px,color:#ffffff;
+	classDef medium fill:#faad14,stroke:#ad6800,stroke-width:2px,color:#ffffff;
+	classDef low fill:#52c41a,stroke:#237804,stroke-width:2px,color:#ffffff;
+
+
 	A[Homepage] --> B(About Us)
 	A --> E(Services)
 	A --> C(Blog)
@@ -57,4 +63,9 @@ graph LR
 
 	D --> D1(Map & Directions)
 	D --> D2(Contact Form)
+
+	%%DefPriority
+	class A,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3 high;
+	class B,ER1,ER2,ER3,D,D1,D2 medium;
+	class C,C1,C2,CA1,CA2 low;
 ```
