@@ -45,20 +45,25 @@ graph LR
 	Pro1 --> Pro2(Registration)
 	Pro1 --> Pro3(Login)
 	Pro2 --> Pro3
+	Pro3 --> S1(Supplier list)
+	Pro3 --> S2(Rental partner)
 
 	SE1 --> SE2(Registration)
 	SE1 --> SE3(Login)
 	SE2 --> SE3
 
+
 	Sup1 --> Sup2(Registration)
 	Sup1 --> Sup3(Login)
 	Sup2 --> Sup3
 	Sup1 --> D
+	Sup3 --> Sup4(Profile)
 
 	ER1 --> ER2(Registration)
 	ER1 --> ER3(Login)
 	ER2 --> ER3
 	ER1 --> D
+	ER4 --> ER5(Profile)
 
 	D --> D1(Map & Directions)
 	D --> D2(Contact Form)
