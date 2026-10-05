@@ -63,13 +63,13 @@ graph LR
 	ER1 --> ER3(Login)
 	ER2 --> ER3
 	ER1 --> D
-	ER4 --> ER5(Profile)
+	ER3 --> ER5(Profile)
 
 	D --> D1(Map & Directions)
 	D --> D2(Contact Form)
 
 	%%DefPriority
-	class A,D,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3,Sup2,Sup3,ER1,ER2,ER3 high;
+	class A,D,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3,Sup2,Sup3,ER1,ER2,ER3,Sup4,S2,S1,ER5 high;
 	class B,D1,D2 medium;
 	class C,C1,C2,CA1,CA2 low;
 ```
