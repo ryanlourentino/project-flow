@@ -23,53 +23,71 @@ graph LR
 	classDef medium fill:#faad14,stroke:#ad6800,stroke-width:2px,color:#ffffff;
 	classDef low fill:#52c41a,stroke:#237804,stroke-width:2px,color:#ffffff;
 
+	%% Public Project Flow Website
+    subgraph Public["Public Project Flow Website"]
+        A[Homepage] --> B["About Us"]
+        A --> C["Blog"]
 
-	A[Homepage] --> B(About Us)
-	A --> E(Services)
-	A --> C(Blog)
-	A --> D(Contact Us)
+        C --> C1["Our Team"]
+        C --> C2["Our History"]
 
-	C --> C1(Our Team)
-	C --> C2(Our History)
+        C1 --> CA1["Profile: Ryan Lourentino"]
+        C1 --> CA2["Profile: 羅奕展"]
 
-	C1 --> CA1(Profile: Ryan Lourentino)
-	C1 --> CA2(Profile: 羅奕展)
+        A --> D["Contact Us"]
+		
+        A --> E["Services"]
+    end
 
-	E --> Co1(For Contractors)
-	E --> Sup1(For Suppliers)
-	E --> ER1(For Equipment Rental)
+    %% Customer Contact Services
+    subgraph Contact["Project Flow Contact Services"]
+		D --> D1["Contact Info"]
+        D1 --> D2["Map & Directions"]
+        D1 --> D3["Contact Form"]
+    end
 
-	Co1 --> Pro1(Procurement Team)
-	Co1 --> SE1(Site Engineer)
+    %% Project Flow Application
+    subgraph App["Project Flow Application"]
+        E --> Co1["For Contractors"]
+        E --> Sup1["For Suppliers"]
+        E --> ER1["For Equipment Rental"]
 
-	Pro1 --> Pro2(Registration)
-	Pro1 --> Pro3(Login)
-	Pro2 --> Pro3
-	Pro3 --> S1(Supplier list)
-	Pro3 --> S2(Rental partner)
+        subgraph Contractors["Contractor Homepage"]
+            Co1 --> Pro1["Procurement Team"]
+            Co1 --> SE1["Site Engineer"]
 
-	SE1 --> SE2(Registration)
-	SE1 --> SE3(Login)
-	SE2 --> SE3
+            Pro1 --> Pro2["Registration"]
+            Pro1 --> Pro3["Login"]
+            Pro2 --> Pro3
+            Pro3 --> S1["Supplier list"]
+            Pro3 --> S2["Rental partner"]
 
+            SE1 --> SE2["Registration"]
+            SE1 --> SE3["Login"]
+            SE2 --> SE3
+        end
 
-	Sup1 --> Sup2(Registration)
-	Sup1 --> Sup3(Login)
-	Sup2 --> Sup3
-	Sup1 --> D
-	Sup3 --> Sup4(Profile)
+        subgraph Suppliers["Supplier Homepage"]
+            Sup1 --> Sup2["Registration"]
+            Sup1 --> Sup3["Login"]
+            Sup2 --> Sup3
+            Sup1 --> D1
+            Sup3 --> Sup4["Profile"]
+        end
 
-	ER1 --> ER2(Registration)
-	ER1 --> ER3(Login)
-	ER2 --> ER3
-	ER1 --> D
-	ER3 --> ER5(Profile)
+        subgraph Rentals["Rental Homepage"]
+            ER1 --> ER2["Registration"]
+            ER1 --> ER3["Login"]
+            ER2 --> ER3
+            ER1 --> D1
+            ER3 --> ER5["Profile"]
+        end
+    end
 
-	D --> D1(Map & Directions)
-	D --> D2(Contact Form)
+	
 
 	%%DefPriority
-	class A,D,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3,Sup2,Sup3,ER1,ER2,ER3,Sup4,S2,S1,ER5 high;
-	class B,D1,D2 medium;
+	class A,D,D1,E,Co1,Sup1,Pro1,Pro2,Pro3,SE1,SE2,SE3,Sup2,Sup3,ER1,ER2,ER3,Sup4,S2,S1,ER5 high;
+	class B,D2,D3 medium;
 	class C,C1,C2,CA1,CA2 low;
 ```
