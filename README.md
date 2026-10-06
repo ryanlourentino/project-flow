@@ -77,6 +77,8 @@ graph LR
 			Sup1 --> Sup3["Login"]
 			Sup2 --> Sup3
 			Sup3 --> Sup4["Dashboard"]
+			Sup4 --> Sup5["Inventory Overview"]
+			Sup4 --> Sup6["Customer Managment"]
 		end
 
 		%% Rental Homepage
@@ -84,7 +86,10 @@ graph LR
 			ER1 --> ER2["Registration"]
 			ER1 --> ER3["Login"]
 			ER2 --> ER3
-			ER3 --> ER5["Dashboard"]
+			ER3 --> ER4["Dashboard"]
+			ER4 --> ER5["Equiment Overview"]
+			ER4 --> ER6["Customer Managment"]
+
 		end
 	end
 
@@ -93,7 +98,7 @@ graph LR
 	ER1 -.-> D1
 
 	%% Priority Class Assignments
-	class A,D,D1,E,Co1,Sup1,Pro1,Pro2,Pro3,Pro4,Pro5,Pro6,SE1,SE2,SE3,SE4,SE5,SE6,Sup2,Sup3,ER1,ER2,ER3,Sup4,ER5 high;
+	class A,D,D1,E,Co1,Sup1,Pro1,Pro2,Pro3,Pro4,Pro5,Pro6,SE1,SE2,SE3,SE4,SE5,SE6,Sup2,Sup3,ER1,ER2,ER3,Sup4,Sup5,Sup6,ER4,ER5,ER6 high;
 	class B,D2,D3 medium;
 	class C,C1,C2,CA1,CA2 low;
 ```
