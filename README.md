@@ -59,16 +59,24 @@ graph LR
 			Pro1 --> Pro2["Registration"]
 			Pro1 --> Pro3["Login"]
 			Pro2 --> Pro3
+
+			%% Procurement Dashboard
+			subgraph Procurement["Procurement Dashboard"]
 			Pro3 --> Pro4["Dashboard"]
 			Pro4 --> Pro5["Supplier List"]
 			Pro4 --> Pro6["Rental Partner"]
 
+			end
+
+			%% Site Engineer Dashboard
+			subgraph Site Engineer["Site Engineer Dashboard"]
 			SE1 --> SE2["Registration"]
 			SE1 --> SE3["Login"]
 			SE2 --> SE3
 			SE3 --> SE4["Dasboard"]
 			SE4 --> SE5["Mobile OCR Scanner"]
 			SE4 --> SE6["Project Documentation"]
+			end
 		end
 
 		%% Supplier Homepage
