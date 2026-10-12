@@ -16,6 +16,14 @@ Software Engineering in Construction Management - Assignment #2
 |  Medium | Yellow | Important functions implemented after the core functions |
 |  Low | Green | Optional or lower-priority functions |
 
+## Priority Legend
+
+| Priority | Color | Description |
+|---|---|---|
+|  High | Red | Core functions that should be implemented first |
+|  Medium | Yellow | Important functions implemented after the core functions |
+|  Low | Green | Optional or lower-priority functions |
+
 ```mermaid 
 graph LR
 	%% Priority Class Definitions
@@ -68,15 +76,17 @@ graph LR
 
 			end
 
-			%% Site Engineer Dashboard
-			subgraph Site Engineer["Site Engineer Dashboard"]
 			SE1 --> SE2["Registration"]
 			SE1 --> SE3["Login"]
 			SE2 --> SE3
+
+			%% Site Engineer Dashboard
+			subgraph Site Engineer["Site Engineer Dashboard"]
 			SE3 --> SE4["Dasboard"]
 			SE4 --> SE5["Mobile OCR Scanner"]
 			SE4 --> SE6["Project Documentation"]
 			end
+
 		end
 
 		%% Supplier Homepage
