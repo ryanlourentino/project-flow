@@ -32,91 +32,97 @@ graph LR
 	classDef low fill:#52c41a,stroke:#237804,stroke-width:2px,color:#ffffff;
 
 	%% Public Project Flow Website
-	subgraph Public["Public Project Flow Website"]
-		A[Homepage] --> B["About Us"]
-		A --> C["Blog"]
+    subgraph Public["Public Project Flow Website"]
+        A[Homepage] --> B["About Us"]
+        A --> C["Blog"]
 
-		C --> C1["Our Team"]
-		C --> C2["Our History"]
+        C --> C1["Our Team"]
+        C --> C2["Our History"]
 
-		C1 --> CA1["Profile: Ryan Lourentino"]
-		C1 --> CA2["Profile: 羅奕展"]
+        C1 --> CA1["Profile: Ryan Lourentino"]
+        C1 --> CA2["Profile: 羅奕展"]
 
-		A --> D["Contact Us"]
-		A --> E["Services"]
-	end
+        A --> D["Contact Us"]
+        A --> E["Services"]
+    end
 
-	%% Customer Contact Services
-	subgraph Contact["Project Flow Contact Services"]
-		D --> D1["Contact Info"]
-		D1 --> D2["Map & Directions"]
-		D1 --> D3["Contact Form"]
-	end
+    %% Customer Contact Services
+    subgraph Contact["Project Flow Contact Services"]
+        D --> D1["Contact Info"]
+        D1 --> D2["Map & Directions"]
+        D1 --> D3["Contact Form"]
+    end
 
-	%% Project Flow Application Section
-	subgraph App["Project Flow Application"]
-		E --> Co1["For Contractors"]
-		E --> Sup1["For Suppliers"]
-		E --> ER1["For Equipment Rental"]
+    %% Project Flow Application Section
+    subgraph App["Project Flow Application"]
+        E --> Co1["For Contractors"]
+        E --> Sup1["For Suppliers"]
+        E --> ER1["For Equipment Rental"]
+		E --> Ad1["For Platform Admins"]
 
-		%% Contractor Homepage
-		subgraph Contractors["Contractor Dashboard"]
-			Co1 --> Pro1["Procurement Team"]
-			Co1 --> SE1["Site Engineer"]
+        %% Contractor Homepage
+        subgraph Contractors["Contractor Dashboard"]
+            Co1 --> Pro1["Procurement Team"]
+            Co1 --> SE1["Site Engineer"]
 
-			Pro1 --> Pro2["Registration"]
-			Pro1 --> Pro3["Login"]
-			Pro2 --> Pro3
+            Pro1 --> Pro2["Registration"]
+            Pro1 --> Pro3["Login"]
+            Pro2 --> Pro3
 
-			%% Procurement Dashboard
-			subgraph Procurement["Procurement Dashboard"]
-			Pro3 --> Pro4["Dashboard"]
-			Pro4 --> Pro5["Supplier List"]
-			Pro4 --> Pro6["Rental Partner"]
+            %% Procurement Dashboard
+            subgraph Procurement["Procurement Dashboard"]
+                Pro3 --> Pro4["Dashboard"]
+                Pro4 --> Pro5["Supplier List & Ratings"]
+                Pro4 --> Pro6["Rental Partner"]
+                Pro4 --> Pro7["Auxiliary Reminders"]
+            end
 
-			end
+            SE1 --> SE2["Registration"]
+            SE1 --> SE3["Login"]
+            SE2 --> SE3
 
-			SE1 --> SE2["Registration"]
-			SE1 --> SE3["Login"]
-			SE2 --> SE3
+            %% Site Engineer Dashboard
+            subgraph SiteEngineer["Site Engineer Dashboard"]
+                SE3 --> SE4["Dashboard"]
+                SE4 --> SE5["Mobile OCR Scanner"]
+                SE4 --> SE6["Project Documentation"]
+            end
+        end
 
-			%% Site Engineer Dashboard
-			subgraph Site Engineer["Site Engineer Dashboard"]
-			SE3 --> SE4["Dasboard"]
-			SE4 --> SE5["Mobile OCR Scanner"]
-			SE4 --> SE6["Project Documentation"]
-			end
+        %% Supplier Homepage
+        subgraph Suppliers["Supplier Dashboard"]
+            Sup1 --> Sup2["Registration"]
+            Sup1 --> Sup3["Login"]
+            Sup2 --> Sup3
+            Sup3 --> Sup4["Dashboard"]
+            Sup4 --> Sup5["Inventory Overview"]
+            Sup4 --> Sup6["Customer Management"]
+        end
 
-		end
+        %% Rental Homepage
+        subgraph Rentals["Rental Dashboard"]
+            ER1 --> ER2["Registration"]
+            ER1 --> ER3["Login"]
+            ER2 --> ER3
+            ER3 --> ER4["Dashboard"]
+            ER4 --> ER5["Equipment Overview"]
+            ER4 --> ER6["Customer Management"]
+        end
 
-		%% Supplier Homepage
-		subgraph Suppliers["Supplier Dashboard"]
-			Sup1 --> Sup2["Registration"]
-			Sup1 --> Sup3["Login"]
-			Sup2 --> Sup3
-			Sup3 --> Sup4["Dashboard"]
-			Sup4 --> Sup5["Inventory Overview"]
-			Sup4 --> Sup6["Customer Managment"]
-		end
-
-		%% Rental Homepage
-		subgraph Rentals["Rental Dashboard"]
-			ER1 --> ER2["Registration"]
-			ER1 --> ER3["Login"]
-			ER2 --> ER3
-			ER3 --> ER4["Dashboard"]
-			ER4 --> ER5["Equiment Overview"]
-			ER4 --> ER6["Customer Managment"]
-
-		end
-	end
+		%% Admin Portal
+        subgraph Admin["Platform Administration"]
+            Ad1 --> Ad2["Login"] --> Ad3["Admin Console"]
+            Ad3 --> Ad4["Supplier Verification Gate"]
+            Ad3 --> Ad5["Marketplace Quality Control"]
+        end
+    end
 
 	%% Direct Navigation Links back to Contact
 	Sup1 -.-> D1
 	ER1 -.-> D1
 
 	%% Priority Class Assignments
-	class A,D,D1,E,Co1,Sup1,Pro1,Pro2,Pro3,Pro4,Pro5,Pro6,SE1,SE2,SE3,SE4,SE5,SE6,Sup2,Sup3,ER1,ER2,ER3,Sup4,Sup5,Sup6,ER4,ER5,ER6 high;
-	class B,D2,D3 medium;
-	class C,C1,C2,CA1,CA2 low;
+	class A,D,D1,E,Co1,Sup1,Ad1,Pro1,Pro2,Pro3,Pro4,SE1,SE2,SE3,SE4,SE6,PM1,PM2,PM3,PM5,Sup2,Sup3,Sup4,ER1,ER2,ER3,ER4,ER5,Ad2,Ad3,Ad4 high;
+    class B,D2,D3,Pro5,Pro6,SE5,PM4,Sup5,Sup6,ER6,Ad5 medium;
+    class C,C1,C2,CA1,CA2 low;
 ```
