@@ -122,7 +122,7 @@ graph LR
 	ER1 -.-> D1
 
 	%% Priority Class Assignments
-	class A,D,D1,E,Co1,Sup1,Ad1,Pro1,Pro2,Pro3,Pro4,SE1,SE2,SE3,SE4,SE6,PM1,PM2,PM3,PM5,Sup2,Sup3,Sup4,ER1,ER2,ER3,ER4,ER5,Ad2,Ad3,Ad4 high;
+	class A,D,D1,E,Co1,Sup1,Ad1,Pro1,Pro2,Pro3,Pro4,Pro7,SE1,SE2,SE3,SE4,SE6,PM1,PM2,PM3,PM5,Sup2,Sup3,Sup4,ER1,ER2,ER3,ER4,ER5,Ad2,Ad3,Ad4 high;
     class B,D2,D3,Pro5,Pro6,SE5,PM4,Sup5,Sup6,ER6,Ad5 medium;
     class C,C1,C2,CA1,CA2 low;
 ```
