@@ -126,6 +126,7 @@ graph LR
 		subgraph Delivery["Express Delivery Services']
 			Pro9 --> ED["Order Processing"]
 			ED --> ED1["Assigning Driver & Delivery Truck"]
+		end
 
 		%% Admin Portal
         subgraph Admin["Platform Administration"]
