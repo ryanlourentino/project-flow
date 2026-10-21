@@ -123,7 +123,7 @@ graph LR
         end
 
 		%% Delivery Services
-		subgraph Delivery["Express Delivery Services']
+		subgraph Delivery["Express Delivery Services"]
 			Pro9 --> ED["Order Processing"]
 			ED --> ED1["Assigning Driver & Delivery Truck"]
 		end
