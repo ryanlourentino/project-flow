@@ -14,7 +14,7 @@ Software Engineering in Construction Management - Assignment #2
 |---|---|---|
 |  High | Red | Core functions that should be implemented first |
 |  Medium | Yellow | Important functions implemented after the core functions |
-|  Low | Green | Optional or lower-priority functions |
+|  Low | Green | Lower-priority and future enhancement functions |
 
 ```mermaid 
 graph LR
@@ -52,6 +52,15 @@ graph LR
         E --> ER1["For Equipment Rental"]
 		E --> Ad1["For Platform Admins"]
 
+		%% Notification Services
+		subgraph Notification["Notification Services"]
+			E --> N["Notification Management"]
+			N --> N1["Order Notification"]
+			N --> N2["Order Processing"]
+			N2 --> N3["AI Predictive Order Processing"]
+			Pro9 --> N1
+		end
+
         %% Contractor Homepage
         subgraph Contractors["Contractor Dashboard"]
             Co1 --> Pro1["Procurement Team"]
@@ -60,13 +69,22 @@ graph LR
             Pro1 --> Pro2["Registration"]
             Pro1 --> Pro3["Login"]
             Pro2 --> Pro3
+			SE6 --> SE7["Documentation Storage"]
+			SE7 --> SE8["Documentation List"]
 
             %% Procurement Dashboard
             subgraph Procurement["Procurement Dashboard"]
                 Pro3 --> Pro4["Dashboard"]
                 Pro4 --> Pro5["Supplier List & Ratings"]
-                Pro4 --> Pro6["Rental Partner"]
-                Pro4 --> Pro7["Auxiliary Reminders"]
+                Pro4 --> Pro6["Rental Partner List"]
+                N2 --> Pro7["Auxiliary Reminders"]
+				Pro4 --> Pro7
+				Pro4 --> SE8
+				N1 --> Pro4
+				Pro5 --> Pro9["Check Out Order"]
+				Pro6 --> Pro9
+				N3 --> Pro10["AI Auxiliary Reminders"]
+				Pro7 --> Pro10
             end
 
             SE1 --> SE2["Registration"]
@@ -78,6 +96,7 @@ graph LR
                 SE3 --> SE4["Dashboard"]
                 SE4 --> SE5["Mobile OCR Scanner"]
                 SE4 --> SE6["Project Documentation"]
+				SE4 --> SE8
             end
         end
 
@@ -89,6 +108,7 @@ graph LR
             Sup3 --> Sup4["Dashboard"]
             Sup4 --> Sup5["Inventory Overview"]
             Sup4 --> Sup6["Customer Management"]
+			N1 --> Sup4
         end
 
         %% Rental Homepage
@@ -99,7 +119,13 @@ graph LR
             ER3 --> ER4["Dashboard"]
             ER4 --> ER5["Equipment Overview"]
             ER4 --> ER6["Customer Management"]
+			N1 --> ER4
         end
+
+		%% Delivery Services
+		subgraph Delivery["Express Delivery Services']
+			Pro9 --> ED["Order Processing"]
+			ED --> ED1["Assigning Driver & Delivery Truck"]
 
 		%% Admin Portal
         subgraph Admin["Platform Administration"]
@@ -114,7 +140,7 @@ graph LR
 	ER1 -.-> D1
 
 	%% Priority Class Assignments
-	class A,D,D1,E,Co1,Sup1,Ad1,Pro1,Pro2,Pro3,Pro4,Pro7,SE1,SE2,SE3,SE4,SE6,PM1,PM2,PM3,PM5,Sup2,Sup3,Sup4,ER1,ER2,ER3,ER4,ER5,Ad2,Ad3,Ad4 high;
-    class B,D2,D3,Pro5,Pro6,SE5,PM4,Sup5,Sup6,ER6,Ad5 medium;
-    class C,C1,C2,CA1,CA2 low;
+	class A,Ad1,Ad2,Ad3,Ad4,Co1,D,D1,E,ER1,ER2,ER3,ER4,ER5,N,PM1,PM2,PM3,PM5,Pro1,Pro2,Pro3,Pro4,SE1,SE2,SE3,SE4,SE6,Sup1,Sup2,Sup3,Sup4 high;
+	class Ad5,B,D2,D3,ER6,N1,N2,PM4,Pro5,Pro6,Pro7,Pro8,Pro9,SE5,SE7,SE8,Sup5,Sup6 medium;
+	class C,C1,C2,CA1,CA2,ED,ED1,N3,Pro10 low;
 ```
