@@ -85,6 +85,8 @@ graph LR
 				Pro6 --> Pro9
 				N3 --> Pro10["AI Auxiliary Reminders"]
 				Pro7 --> Pro10
+				Pro4 --> Pro11["BIM Upload"]
+				Pro11 --> Pro12["AI-Based Predictive Procurement"]
             end
 
             SE1 --> SE2["Registration"]
@@ -109,6 +111,8 @@ graph LR
             Sup4 --> Sup5["Inventory Overview"]
             Sup4 --> Sup6["Customer Management"]
 			N1 --> Sup4
+			Sup6 --> Sup7["Order Processed"]
+			Sup7 --> N2
         end
 
         %% Rental Homepage
@@ -120,12 +124,19 @@ graph LR
             ER4 --> ER5["Equipment Overview"]
             ER4 --> ER6["Customer Management"]
 			N1 --> ER4
+			ER6 --> ER7["Order Processed"]
+			ER7 --> N2
         end
 
 		%% Delivery Services
 		subgraph Delivery["Express Delivery Services"]
 			Pro9 --> ED["Order Processing"]
 			ED --> ED1["Assigning Driver & Delivery Truck"]
+			ED1 --> ED2["Truck Location Tracker"]
+			ED2 --> Pro4
+			ED2 --> SE4
+			ED2 --> Sup4
+			ED2 --> ER4
 		end
 
 		%% Admin Portal
@@ -142,6 +153,6 @@ graph LR
 
 	%% Priority Class Assignments
 	class A,Ad1,Ad2,Ad3,Ad4,Co1,D,D1,E,ER1,ER2,ER3,ER4,ER5,N,PM1,PM2,PM3,PM5,Pro1,Pro2,Pro3,Pro4,SE1,SE2,SE3,SE4,SE6,Sup1,Sup2,Sup3,Sup4 high;
-	class Ad5,B,D2,D3,ER6,N1,N2,PM4,Pro5,Pro6,Pro7,Pro8,Pro9,SE5,SE7,SE8,Sup5,Sup6 medium;
-	class C,C1,C2,CA1,CA2,ED,ED1,N3,Pro10 low;
+	class Ad5,B,D2,D3,ER6,ER7,N1,N2,PM4,Pro5,Pro6,Pro7,Pro8,Pro9,SE5,SE7,SE8,Sup5,Sup6,Sup7 medium;
+	class C,C1,C2,CA1,CA2,ED,ED1,ED2,N3,Pro10,Pro11,Pro12 low;
 ```
