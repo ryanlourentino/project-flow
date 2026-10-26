@@ -91,7 +91,20 @@ erDiagram
         string doc_type "MVP - OCR Receipt / QA Checklist"
         string doc_url "MVP - Cloud Storage Link"
     }
-    
+
+
+    %% ==========================================
+    %% Notifications
+    %% ==========================================
+    Notifications {
+        int notification_id PK "MVP - Notification ID"
+        int user_id FK "MVP - Recipient"
+        int order_id FK "MVP - Related Order"
+        string message "MVP - Notification Content"
+        boolean is_read "MVP - Read Status"
+        date created_at "MVP - Time Sent"
+    }
+
     %% ==========================================
     %% Entity Relationships
     %% ==========================================
@@ -113,4 +126,7 @@ erDiagram
     
     MaterialList ||--o{ OrderMaterials : "sold as (MVP)"
     EquipmentList ||--o{ OrderEquipment : "rented as (MVP)"
+
+    Users ||--o{ Notifications : "receives (MVP)"
+    PurchaseOrders ||--o{ Notifications : "triggers (MVP)"
 ```
