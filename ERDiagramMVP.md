@@ -7,7 +7,8 @@ erDiagram
         int user_id PK "MVP - Central User ID"
         string username "MVP - Username"
         string email "MVP - Email Address"
-        string account_type "MVP - Contractor/Supplier/Rental"
+        string password_hash "MVP - Password"
+        string account_type "MVP - Contractor/Supplier/Rental/Admin"
     }
 
     %% ==========================================
@@ -22,7 +23,8 @@ erDiagram
     Suppliers {
         int supplier_id PK "MVP - Supplier ID"
         int user_id FK "Links to Users"
-        string iso_certification "MVP - Verification Status"
+        string iso_certification "MVP - ISO Certificate Info"
+        string verification_status "MVP - Pending/Approved/Rejected"
     }
 
     EquipmentRentals {
@@ -53,20 +55,22 @@ erDiagram
     PurchaseOrders {
         int order_id PK "MVP - Unique Order ID"
         int contractor_id FK "MVP - Placed By"
+        int proj_id FK "MVP - For Project"
         date order_date "MVP - Date Placed"
+        string order_status "MVP - Pending/Processed/Delivered"
         float total_value "MVP - Order Value for Commission"
     }
 
     %% Bridge Tables for Order Line Items
     OrderMaterials {
-        int order_id FK "MVP - Links to Order"
-        int material_id FK "MVP - Links to Material"
+        int order_id PK, FK "MVP - Links to Order"
+        int material_id PK, FK "MVP - Links to Material"
         int quantity "MVP - Amount Ordered"
     }
 
     OrderEquipment {
-        int order_id FK "MVP - Links to Order"
-        int equip_id FK "MVP - Links to Equipment"
+        int order_id PK, FK "MVP - Links to Order"
+        int equip_id PK, FK "MVP - Links to Equipment"
         int rental_days "MVP - Duration"
     }
 
