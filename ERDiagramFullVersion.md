@@ -7,7 +7,8 @@ erDiagram
         int user_id PK "MVP - Central User ID"
         string username "MVP - Username"
         string email "MVP - Email Address"
-        string account_type "MVP - Contractor/Supplier/Rental"
+        string password "MVP - Password"
+        string account_type "MVP - Contractor/Supplier/Rental/Admin"
     }
 
     %% ==========================================
@@ -16,7 +17,7 @@ erDiagram
     Contractors {
         int contractor_id PK "MVP - Contractor ID"
         int user_id FK "Links to Users"
-        string role "MVP - Role (Procurement/SiteEngineer/PM)"
+        string role "MVP - Role (Procurement/SiteEngineer/Project Manager)"
     }
 
     Suppliers {
@@ -90,19 +91,21 @@ erDiagram
     PurchaseOrders {
         int order_id PK "MVP - Unique Order ID"
         int contractor_id FK "MVP - Placed By"
+        int proj_id FK "MVP - For Project"
         date order_date "MVP - Date Placed"
+        string order_status "MVP - Pending/Processed/Delivered"
         float total_value "MVP - Order Value for Commission"
     }
 
     OrderMaterials {
-        int order_id FK "MVP - Links to Order"
-        int material_id FK "MVP - Links to Material"
+        int order_id PK, FK "MVP - Links to Order"
+        int material_id PK, FK "MVP - Links to Material"
         int quantity "MVP - Amount Ordered"
     }
 
     OrderEquipment {
-        int order_id FK "MVP - Links to Order"
-        int equip_id FK "MVP - Links to Equipment"
+        int order_id PK, FK "MVP - Links to Order"
+        int equip_id PK, FK "MVP - Links to Equipment"
         int rental_days "MVP - Duration"
     }
 
@@ -121,6 +124,18 @@ erDiagram
         string live_gps_status "ADV - Real-time Location Tracking"
     }
     
+    %% ==========================================
+    %% Notifications
+    %% ==========================================
+    Notifications {
+        int notification_id PK "MVP - Notification ID"
+        int user_id FK "MVP - Recipient"
+        int order_id FK "MVP - Related Order"
+        string message "MVP - Notification Content"
+        boolean is_read "MVP - Read Status"
+        date created_at "MVP - Time Sent"
+    }
+
     %% ==========================================
     %% Entity Relationships
     %% ==========================================
@@ -152,4 +167,7 @@ erDiagram
 
     PurchaseOrders ||--o| Deliveries : "shipped via (ADV)"
     Couriers ||--o{ Deliveries : "fulfills (ADV)"
+
+    Users ||--o{ Notifications : "receives (MVP)"
+    PurchaseOrders ||--o{ Notifications : "triggers (MVP)"
 ```
