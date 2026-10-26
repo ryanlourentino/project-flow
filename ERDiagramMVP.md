@@ -7,7 +7,7 @@ erDiagram
         int user_id PK "MVP - Central User ID"
         string username "MVP - Username"
         string email "MVP - Email Address"
-        string password_hash "MVP - Password"
+        string password "MVP - Password"
         string account_type "MVP - Contractor/Supplier/Rental/Admin"
     }
 
