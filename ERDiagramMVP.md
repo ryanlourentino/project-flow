@@ -39,25 +39,20 @@ erDiagram
     %% ==========================================
     %% Catalogs & Inventory
     %% ==========================================
-    MaterialList {
-        int material_id PK "MVP - Material ID"
+    Categories {
+        int category_id PK "MVP - Category ID"
+        string category_name "MVP - Category Name"
+        string item_type "MVP - Material/Machine"
+    }
+
+    Items {
+        int item_id PK "MVP - Item ID"
         string source_material_id "MVP - Source Material ID"
-        string material_name "MVP - Material Name"
-        string unit "MVP - Unit of Measure"
+        int category_id FK "MVP - Item Category"
+        int listed_by FK "MVP - Listed By Supplier/Rental Partner"
+        string item_name "MVP - Item Name"
+        string unit "MVP - Unit (kg/Piece/Hour/Day/...)"
         float avg_price "MVP - Average Market Price"
-    }
-
-    SupplierMaterials {
-        int supplier_id PK, FK "MVP - Offered By Supplier"
-        int material_id PK, FK "MVP - Links to Material"
-        float listed_price "MVP - Supplier Price"
-    }
-
-    EquipmentList {
-        int equip_id PK "MVP - Equipment ID"
-        int rental_partner_id FK "MVP - Listed By Rental Partner"
-        string equip_name "MVP - Equipment Name"
-        float equip_price "MVP - Equipment Price"
     }
 
     %% ==========================================
@@ -73,19 +68,13 @@ erDiagram
         float total_value "MVP - Order Value for Commission"
     }
 
-    %% Bridge Tables for Order Line Items
-    OrderMaterials {
+    %% Bridge Table for Order Line Items
+    OrderItems {
         int order_id PK, FK "MVP - Links to Order"
-        int material_id PK, FK "MVP - Links to Material"
-        int quantity "MVP - Amount Ordered"
+        int item_id PK, FK "MVP - Links to Item"
+        int quantity "MVP - Quantity or Rental Duration"
         float unit_price "MVP - Price Per Unit"
         float discount_rate "MVP - Discount Percentage"
-    }
-
-    OrderEquipment {
-        int order_id PK, FK "MVP - Links to Order"
-        int equip_id PK, FK "MVP - Links to Equipment"
-        int rental_days "MVP - Duration"
     }
 
     %% ==========================================
@@ -132,15 +121,12 @@ erDiagram
     Projects ||--o{ ProjectDocumentation : "stores OCR/QA docs (MVP)"
     Projects ||--o{ PurchaseOrders : "requires (MVP)"
 
-    Suppliers ||--o{ SupplierMaterials : "offers (MVP)"
-    MaterialList ||--o{ SupplierMaterials : "offered by (MVP)"
-    EquipmentRentals ||--o{ EquipmentList : "lists inventory (MVP)"
+    Categories ||--o{ Items : "categorizes (MVP)"
+    Users ||--o{ Items : "lists inventory (MVP)"
 
-    PurchaseOrders ||--o{ OrderMaterials : "contains (MVP)"
-    PurchaseOrders ||--o{ OrderEquipment : "contains (MVP)"
+    PurchaseOrders ||--o{ OrderItems : "contains (MVP)"
     
-    MaterialList ||--o{ OrderMaterials : "sold as (MVP)"
-    EquipmentList ||--o{ OrderEquipment : "rented as (MVP)"
+    Items ||--o{ OrderItems : "ordered as (MVP)"
 
     Users ||--o{ Notifications : "receives (MVP)"
     PurchaseOrders ||--o{ Notifications : "triggers (MVP)"
