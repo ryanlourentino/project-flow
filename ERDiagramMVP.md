@@ -5,9 +5,13 @@ erDiagram
     %% ==========================================
     Users {
         int user_id PK "MVP - Central User ID"
+        string source_company_id "MVP - Source Company ID"
         string username "MVP - Username"
+        string company_name "MVP - Company Name"
         string email "MVP - Email Address"
         string password "MVP - Password"
+        string phone "MVP - Phone Number"
+        string address "MVP - Company Address"
         string account_type "MVP - Contractor/Supplier/Rental/Admin"
     }
 
@@ -37,9 +41,16 @@ erDiagram
     %% ==========================================
     MaterialList {
         int material_id PK "MVP - Material ID"
-        int supplier_id FK "MVP - Listed By Supplier"
+        string source_material_id "MVP - Source Material ID"
         string material_name "MVP - Material Name"
-        float material_price "MVP - Material Price"
+        string unit "MVP - Unit of Measure"
+        float avg_price "MVP - Average Market Price"
+    }
+
+    SupplierMaterials {
+        int supplier_id PK, FK "MVP - Offered By Supplier"
+        int material_id PK, FK "MVP - Links to Material"
+        float listed_price "MVP - Supplier Price"
     }
 
     EquipmentList {
@@ -54,6 +65,7 @@ erDiagram
     %% ==========================================
     PurchaseOrders {
         int order_id PK "MVP - Unique Order ID"
+        string source_transaction_id "MVP - Source Transaction ID"
         int contractor_id FK "MVP - Placed By"
         int proj_id FK "MVP - For Project"
         date order_date "MVP - Date Placed"
@@ -66,6 +78,8 @@ erDiagram
         int order_id PK, FK "MVP - Links to Order"
         int material_id PK, FK "MVP - Links to Material"
         int quantity "MVP - Amount Ordered"
+        float unit_price "MVP - Price Per Unit"
+        float discount_rate "MVP - Discount Percentage"
     }
 
     OrderEquipment {
@@ -118,7 +132,8 @@ erDiagram
     Projects ||--o{ ProjectDocumentation : "stores OCR/QA docs (MVP)"
     Projects ||--o{ PurchaseOrders : "requires (MVP)"
 
-    Suppliers ||--o{ MaterialList : "lists inventory (MVP)"
+    Suppliers ||--o{ SupplierMaterials : "offers (MVP)"
+    MaterialList ||--o{ SupplierMaterials : "offered by (MVP)"
     EquipmentRentals ||--o{ EquipmentList : "lists inventory (MVP)"
 
     PurchaseOrders ||--o{ OrderMaterials : "contains (MVP)"
