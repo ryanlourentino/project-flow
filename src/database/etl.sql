@@ -530,3 +530,219 @@ WHERE item COLLATE utf8mb4_bin REGEXP '^[a-z]';
 SELECT material_id, item
 FROM temp_materials
 WHERE item COLLATE utf8mb4_bin REGEXP '^[a-z]';
+ 
+ 
+-- ---------------------------------------------------------------------
+-- 2.4 Clean the transactions
+-- Bad rows are not deleted. Each one is labelled in reject_reason, so the
+-- report can show what was removed and why. Every rule only labels rows
+-- that have no label yet (reject_reason IS NULL), so a row keeps its FIRST
+-- problem and is counted once. Only unlabelled rows are loaded later.
+-- ---------------------------------------------------------------------
+ 
+-- Purpose: column that holds the reason a transaction is rejected.
+ALTER TABLE temp_transactions ADD COLUMN reject_reason VARCHAR(50) NULL;
+ 
+ 
+-- 2.4a Dates that are too old ----------------------------------------
+ 
+-- Find
+-- Purpose: count transactions per year.
+-- Result: 1950-1980 have ~150-200 rows per year, 1981-2017 have none,
+-- 2018-2025 have ~6,000 per year. The 1950-1980 rows are impossible.
+SELECT LEFT(transaction_date, 4) AS year, COUNT(*) AS transactions
+FROM temp_transactions
+GROUP BY year
+ORDER BY year;
+ 
+-- Purpose: check for dates in the future (also impossible). Result: 0.
+SELECT COUNT(*) AS future_dates
+FROM temp_transactions
+WHERE transaction_date > CURDATE();
+ 
+-- Purpose: prove the cutoff 2000-01-01 is safe - it lies inside the empty
+-- gap. Result: last old date in 1980, first real date 2018-01-01.
+-- Any cutoff between 1981 and 2017 rejects exactly the same rows.
+SELECT MAX(transaction_date) AS last_old_date
+FROM temp_transactions WHERE transaction_date < '2000-01-01';
+ 
+SELECT MIN(transaction_date) AS first_real_date
+FROM temp_transactions WHERE transaction_date >= '2000-01-01';
+ 
+-- Fix
+-- Purpose: label transactions dated before 2000. STR_TO_DATE turns the text
+-- into a real date so it is compared as a date. Result: 5198 rows.
+UPDATE temp_transactions
+SET reject_reason = 'date before 2000'
+WHERE reject_reason IS NULL
+  AND STR_TO_DATE(transaction_date, '%Y-%m-%d') < '2000-01-01';
+ 
+ 
+-- 2.4b Unknown company IDs (orphans) ----------------------------------
+ 
+-- Purpose: indexes so each transaction can find its company/material
+-- quickly instead of scanning the whole table every time.
+ALTER TABLE temp_companies ADD INDEX idx_company_id (company_id);
+ALTER TABLE temp_materials ADD INDEX idx_material_id (material_id);
+ 
+-- Find
+-- Purpose: view of transactions whose company_id does not exist.
+-- LEFT JOIN keeps every transaction; when no company matches, the company
+-- columns are NULL, so "c.company_id IS NULL" selects the orphans.
+CREATE OR REPLACE VIEW v_unknown_company AS
+SELECT t.row_no, t.transaction_id, t.company_id
+FROM temp_transactions t
+LEFT JOIN temp_companies c ON c.company_id = t.company_id
+WHERE c.company_id IS NULL;
+ 
+-- Purpose: count orphans. Result: 2615 rows, 2615 different IDs - every
+-- bad ID is used once, so they are invented, not typos, and cannot be repaired.
+SELECT COUNT(*) AS unknown_company_rows,
+       COUNT(DISTINCT company_id) AS unknown_ids
+FROM v_unknown_company;
+ 
+-- Purpose: show a few examples.
+SELECT * FROM v_unknown_company LIMIT 3;
+ 
+-- Fix
+-- Purpose: label the orphans. Result: 2393 rows (the other 222 already
+-- have the label "date before 2000").
+UPDATE temp_transactions t
+LEFT JOIN temp_companies c ON c.company_id = t.company_id
+SET t.reject_reason = 'unknown company_id'
+WHERE t.reject_reason IS NULL
+  AND c.company_id IS NULL;
+ 
+ 
+-- 2.4c Unknown material IDs (orphans) ---------------------------------
+ 
+-- Find
+-- Purpose: view of transactions whose material_id does not exist.
+CREATE OR REPLACE VIEW v_unknown_material AS
+SELECT t.row_no, t.transaction_id, t.material_id
+FROM temp_transactions t
+LEFT JOIN temp_materials m ON m.material_id = t.material_id
+WHERE m.material_id IS NULL;
+ 
+-- Purpose: count orphans. Result: 2643 rows, 2643 different IDs.
+SELECT COUNT(*) AS unknown_material_rows,
+       COUNT(DISTINCT material_id) AS unknown_ids
+FROM v_unknown_material;
+ 
+-- Purpose: show a few examples.
+SELECT * FROM v_unknown_material LIMIT 3;
+ 
+-- Fix
+-- Purpose: label the orphans. Result: 2226 rows (the rest already have a label).
+UPDATE temp_transactions t
+LEFT JOIN temp_materials m ON m.material_id = t.material_id
+SET t.reject_reason = 'unknown material_id'
+WHERE t.reject_reason IS NULL
+  AND m.material_id IS NULL;
+ 
+ 
+-- 2.4d Rejection report -------------------------------------------------
+ 
+-- Purpose: summary of valid and rejected transactions.
+-- Result: valid 42130, date before 2000 5198, unknown company_id 2393,
+-- unknown material_id 2226 (total 51947).
+SELECT IFNULL(reject_reason, '(valid)') AS status, COUNT(*) AS transactions
+FROM temp_transactions
+GROUP BY status
+ORDER BY transactions DESC;
+ 
+-- Purpose: count every problem without the "first reason only" rule.
+-- Result: 5198 / 2615 / 2643; 627 rows have 2 or more problems, which is
+-- why the labelled counts above are smaller.
+SELECT
+  SUM(t.transaction_date < '2000-01-01')                       AS old_date,
+  SUM(c.company_id IS NULL)                                    AS unknown_company,
+  SUM(m.material_id IS NULL)                                   AS unknown_material,
+  SUM((t.transaction_date < '2000-01-01')
+      + (c.company_id IS NULL) + (m.material_id IS NULL) >= 2) AS rows_with_2plus_problems
+FROM temp_transactions t
+LEFT JOIN temp_companies c ON c.company_id  = t.company_id
+LEFT JOIN temp_materials m ON m.material_id = t.material_id;
+ 
+ 
+-- 2.4e Wrong totals -------------------------------------------------------
+-- Correct total = quantity x price_per_unit x (1 - discount_rate / 100)
+ 
+-- Find
+-- Purpose: view comparing the file's total with the correct total.
+-- (Text columns are converted to numbers automatically; 2.3c proved they
+-- are all whole numbers.)
+CREATE OR REPLACE VIEW v_total_check AS
+SELECT row_no, transaction_id, quantity, price_per_unit, discount_rate, total_price,
+       ROUND(quantity * price_per_unit * (1 - discount_rate / 100), 2) AS expected_total,
+       total_price - ROUND(quantity * price_per_unit * (1 - discount_rate / 100), 2) AS difference
+FROM temp_transactions;
+ 
+-- Purpose: sort every transaction by how its total compares.
+-- Result: exact 31450, rounding (<= 10) 17962, total = unit price 2535,
+-- other 0.
+SELECT CASE
+         WHEN ABS(difference) < 0.01       THEN '1. exact'
+         WHEN ABS(difference) <= 10        THEN '2. rounding (<= 10)'
+         WHEN total_price = price_per_unit THEN '3. total = unit price'
+         ELSE '4. other'
+       END AS check_result,
+       COUNT(*) AS transactions
+FROM v_total_check
+GROUP BY check_result
+ORDER BY check_result;
+ 
+-- Purpose: show the planted error - the quantity was not multiplied in
+-- (e.g. 149 x 25000 should be 3725000, the file says 25000).
+SELECT * FROM v_total_check
+WHERE total_price = price_per_unit AND quantity <> 1
+LIMIT 3;
+ 
+-- Evidence that no third factor (tax, fee) changes the totals:
+-- Purpose: every total in the file ends in 0 -> totals are rounded to the
+-- nearest 10. Result: 51947 / 51947.
+SELECT SUM(MOD(total_price, 10) = 0) AS ends_in_0, COUNT(*) AS all_rows
+FROM temp_transactions;
+ 
+-- Purpose: the small differences are symmetric (-5..+5, each +/- pair
+-- about equally common). A tax or fee would only make totals higher.
+SELECT difference, COUNT(*) AS transactions
+FROM v_total_check
+WHERE ABS(difference) <= 10
+GROUP BY difference
+ORDER BY difference;
+ 
+-- Purpose: no percentage is added on average. Result: 1 (a 5% tax would give 1.05).
+SELECT ROUND(AVG(total_price / expected_total), 5) AS avg_ratio
+FROM v_total_check
+WHERE NOT (total_price = price_per_unit AND quantity <> 1);
+ 
+-- Note: the 2535 broken totals are spread evenly (~5%) over every year,
+-- quantity range and discount level, so they are random planted errors,
+-- not a business rule.
+ 
+-- Fix
+-- Purpose: column for the exact total. DECIMAL stores money exactly.
+ALTER TABLE temp_transactions ADD COLUMN total_value DECIMAL(14,2);
+ 
+-- Purpose: recalculate every total with one rule. This repairs the 2535
+-- broken totals and replaces the rounded ones with exact values.
+-- Result: 51947 rows changed.
+UPDATE temp_transactions
+SET total_value = ROUND(quantity * price_per_unit * (1 - discount_rate / 100), 2);
+ 
+-- Verify
+-- Purpose: compare old and new totals of broken rows
+-- (e.g. 418 x 100 x 0.84: old 100 -> new 35112.00).
+SELECT transaction_id, quantity, price_per_unit, discount_rate,
+       total_price AS old_total, total_value AS new_total
+FROM temp_transactions
+WHERE total_price = price_per_unit AND quantity <> 1
+LIMIT 3;
+ 
+-- Purpose: confirm every total now matches the formula. Result: 0.
+SELECT COUNT(*) AS wrong_after_fix
+FROM temp_transactions
+WHERE total_value IS NULL
+   OR total_value <> ROUND(quantity * price_per_unit * (1 - discount_rate / 100), 2);
+ 
