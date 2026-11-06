@@ -42,7 +42,6 @@ erDiagram
     Categories {
         int category_id PK "MVP - Category ID"
         string category_name "MVP - Category Name"
-        string item_type "MVP - Material/Machine"
     }
 
     Items {
@@ -53,6 +52,7 @@ erDiagram
         string item_name "MVP - Item Name"
         string unit "MVP - Unit (kg/Piece/Hour/Day/...)"
         float avg_price "MVP - Average Market Price"
+        boolean is_rentable "MVP - For Rent (true) or For Sale (false)"
     }
 
     %% ==========================================
