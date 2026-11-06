@@ -357,3 +357,176 @@ SELECT
   (SELECT COUNT(*) FROM temp_companies)    AS companies,
   (SELECT COUNT(*) FROM temp_materials)    AS materials,
   (SELECT COUNT(*) FROM temp_transactions) AS transactions;
+ 
+ 
+-- ---------------------------------------------------------------------
+-- 2.3 Standardize formats
+-- The same kind of value must always be written the same way, so that
+-- searching, grouping and displaying work correctly.
+-- ---------------------------------------------------------------------
+ 
+-- 2.3a Phone numbers --------------------------------------------------
+ 
+-- Find
+-- Purpose: show every phone format. REGEXP_REPLACE turns each digit into 9,
+-- so numbers with the same shape fall into one group.
+-- Result: 9 formats, e.g. (999) 999-9999, +9-999-999-9999, 999-999-9999,
+-- some with an extension x9999.
+SELECT REGEXP_REPLACE(phone, '[0-9]', '9') AS phone_pattern,
+       COUNT(*)   AS companies,
+       MIN(phone) AS example
+FROM temp_companies
+GROUP BY phone_pattern
+ORDER BY companies DESC;
+ 
+-- Fix
+-- Purpose: helper columns - the original phone (for comparison), its digits
+-- only, and its extension.
+ALTER TABLE temp_companies
+  ADD COLUMN phone_raw    VARCHAR(50),
+  ADD COLUMN phone_digits VARCHAR(20),
+  ADD COLUMN phone_ext    VARCHAR(10);
+ 
+-- Purpose: split each phone into digits and extension.
+-- REGEXP_SUBSTR copies the extension (x + digits at the end);
+-- the inner REGEXP_REPLACE removes the extension, the outer one removes
+-- every character that is not a digit.
+UPDATE temp_companies SET
+  phone_raw    = phone,
+  phone_ext    = REGEXP_SUBSTR(phone, 'x[0-9]+$'),
+  phone_digits = REGEXP_REPLACE(REGEXP_REPLACE(phone, ' ?x[0-9]+$', ''), '[^0-9]', '');
+ 
+-- Purpose: check how many digits each number has.
+-- Result: 335 with 10 digits, 165 with 11 (they start with country code 1).
+SELECT CHAR_LENGTH(phone_digits) AS digit_count, COUNT(*) AS companies
+FROM temp_companies
+GROUP BY digit_count;
+ 
+-- Purpose: remove the US country code "1" from 11-digit numbers.
+UPDATE temp_companies
+SET phone_digits = SUBSTRING(phone_digits, 2)
+WHERE CHAR_LENGTH(phone_digits) = 11 AND phone_digits LIKE '1%';
+ 
+-- Purpose: confirm every number now has exactly 10 digits. Result: 0.
+SELECT COUNT(*) AS not_10_digits
+FROM temp_companies
+WHERE CHAR_LENGTH(phone_digits) <> 10;
+ 
+-- Purpose: rebuild every phone as 123-456-7890, plus " x1234" if it has an
+-- extension. IFNULL keeps the phone from becoming NULL when there is no
+-- extension. Result: 500 matched, 341 changed (159 were already correct).
+UPDATE temp_companies SET phone = CONCAT(
+  SUBSTRING(phone_digits, 1, 3), '-',
+  SUBSTRING(phone_digits, 4, 3), '-',
+  SUBSTRING(phone_digits, 7, 4),
+  IFNULL(CONCAT(' ', phone_ext), '')
+);
+ 
+-- Verify
+-- Purpose: confirm only the standard format remains.
+-- Result: 3 patterns - 999-999-9999 (439), 999-999-9999 x9999 (54),
+-- 999-999-9999 x999 (7).
+SELECT REGEXP_REPLACE(phone, '[0-9]', '9') AS phone_pattern,
+       COUNT(*)   AS companies,
+       MIN(phone) AS example
+FROM temp_companies
+GROUP BY phone_pattern
+ORDER BY companies DESC;
+ 
+-- Purpose: compare original and standardized phones,
+-- e.g. (341) 269-6159 x3074 -> 341-269-6159 x3074.
+SELECT phone_raw, phone FROM temp_companies LIMIT 5;
+ 
+ 
+-- 2.3b Units ----------------------------------------------------------
+ 
+-- Find
+-- Purpose: list units written in more than one way (upper/lower case).
+-- The database collation is case-insensitive, so COLLATE utf8mb4_bin is
+-- used to compare exact characters.
+-- Result: piece -> "Piece,piece"; one test -> "One test,one test".
+SELECT LOWER(unit) AS unit_lower,
+       COUNT(DISTINCT unit COLLATE utf8mb4_bin) AS spellings,
+       GROUP_CONCAT(DISTINCT unit COLLATE utf8mb4_bin) AS written_as
+FROM temp_materials
+GROUP BY unit_lower
+HAVING spellings > 1;
+ 
+-- Purpose: count each spelling. Result: Piece 89, piece 8, One test 13, one test 4.
+SELECT unit COLLATE utf8mb4_bin AS unit_exact, COUNT(*) AS materials
+FROM temp_materials
+WHERE LOWER(unit) IN ('piece', 'one test')
+GROUP BY unit_exact;
+ 
+-- Fix
+-- Purpose: use the majority (capitalized) spelling. Result: 8 rows changed.
+UPDATE temp_materials SET unit = 'Piece'
+WHERE unit COLLATE utf8mb4_bin = 'piece';
+ 
+-- Purpose: same for "one test". Result: 4 rows changed.
+UPDATE temp_materials SET unit = 'One test'
+WHERE unit COLLATE utf8mb4_bin = 'one test';
+ 
+-- Verify
+-- Purpose: confirm no unit has more than one spelling. Result: empty set.
+SELECT LOWER(unit) AS unit_lower,
+       COUNT(DISTINCT unit COLLATE utf8mb4_bin) AS spellings,
+       GROUP_CONCAT(DISTINCT unit COLLATE utf8mb4_bin) AS written_as
+FROM temp_materials
+GROUP BY unit_lower
+HAVING spellings > 1;
+ 
+-- Note: L.㎥, B.㎥ and C.㎥ are different earthwork volume measures, not
+-- typos of ㎥, so they are kept. "root" (a mistranslation of 根, used for
+-- bars) only appears on rebar test items, which are out of scope.
+ 
+ 
+-- 2.3c Columns that should already be consistent -----------------------
+-- Pattern symbols: ^ start, $ end, [0-9] a digit, {8} exactly 8 times,
+-- + one or more, [^@ ] any character except @ and space.
+ 
+-- Purpose: check company IDs are 8 digits and emails have a valid shape.
+-- Result: 0 / 0.
+SELECT SUM(company_id NOT REGEXP '^[0-9]{8}$')         AS bad_id,
+       SUM(email NOT REGEXP '^[^@ ]+@[^@ ]+[.][a-z]+$') AS bad_email
+FROM temp_companies;
+ 
+-- Purpose: check material IDs are 8 digits and prices are whole numbers.
+-- Result: 0 / 0.
+SELECT SUM(material_id NOT REGEXP '^[0-9]{8}$') AS bad_id,
+       SUM(price_avg   NOT REGEXP '^[0-9]+$')   AS bad_price
+FROM temp_materials;
+ 
+-- Purpose: check transaction IDs, numbers and dates (YYYY-MM-DD).
+-- Result: 0 in every column.
+SELECT SUM(transaction_id   NOT REGEXP '^[0-9]{8}$')                   AS bad_id,
+       SUM(company_id       NOT REGEXP '^[0-9]{8}$')                   AS bad_company_id,
+       SUM(material_id      NOT REGEXP '^[0-9]{8}$')                   AS bad_material_id,
+       SUM(quantity         NOT REGEXP '^[0-9]+$')                     AS bad_quantity,
+       SUM(price_per_unit   NOT REGEXP '^[0-9]+$')                     AS bad_price,
+       SUM(discount_rate    NOT REGEXP '^[0-9]+$')                     AS bad_discount,
+       SUM(transaction_date NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$') AS bad_date
+FROM temp_transactions;
+ 
+ 
+-- 2.3d Item names starting with a lowercase letter -----------------------
+ 
+-- Find
+-- Purpose: list item names that start with a lowercase letter
+-- (e.g. "product. plywood. Thick 18mm"). Result: 8 rows.
+SELECT material_id, item
+FROM temp_materials
+WHERE item COLLATE utf8mb4_bin REGEXP '^[a-z]';
+ 
+-- Fix
+-- Purpose: capitalize only the first letter; the rest of the name is kept.
+-- Result: 8 rows changed.
+UPDATE temp_materials
+SET item = CONCAT(UPPER(LEFT(item, 1)), SUBSTRING(item, 2))
+WHERE item COLLATE utf8mb4_bin REGEXP '^[a-z]';
+ 
+-- Verify
+-- Purpose: confirm no item name starts with a lowercase letter. Result: empty set.
+SELECT material_id, item
+FROM temp_materials
+WHERE item COLLATE utf8mb4_bin REGEXP '^[a-z]';
