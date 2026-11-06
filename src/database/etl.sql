@@ -746,3 +746,222 @@ FROM temp_transactions
 WHERE total_value IS NULL
    OR total_value <> ROUND(quantity * price_per_unit * (1 - discount_rate / 100), 2);
  
+ 
+-- ---------------------------------------------------------------------
+-- 2.5 Classify the items
+-- materials.tsv mixes products, machines, labour, testing and construction
+-- work. Project Flow only sells materials (suppliers) and rents equipment
+-- (rental companies). Items are classified by keywords in their names.
+-- Rules run in order; each rule only labels items that have no label yet,
+-- so a specific rule placed early wins over a general rule placed later.
+-- REGEXP 'a|b' means "contains a OR b" (case-insensitive collation).
+-- ---------------------------------------------------------------------
+ 
+-- 2.5a Label columns ---------------------------------------------------
+ 
+-- Purpose: item_group = kind of item, category_name = search category,
+-- is_rentable = offered for rent (TRUE) or for sale (FALSE, the default).
+ALTER TABLE temp_materials
+  ADD COLUMN item_group    VARCHAR(30) NULL,
+  ADD COLUMN category_name VARCHAR(50) NULL,
+  ADD COLUMN is_rentable   BOOLEAN NOT NULL DEFAULT FALSE;
+ 
+ 
+-- 2.5b Group every item -------------------------------------------------
+ 
+-- Purpose: Rule 1 - names with no description (exactly "Products." or "Rebar.").
+-- A customer cannot order an unidentified item. Result: 2 rows.
+UPDATE temp_materials SET item_group = 'Unidentified'
+WHERE item_group IS NULL
+  AND item REGEXP '^(Products?|Rebar)[.]?$';
+ 
+-- Purpose: Rule 2 - construction work hidden among products (the price
+-- includes labour or installation, so it is done by a subcontractor).
+-- Must run before Rule 4. Result: 5 rows.
+UPDATE temp_materials SET item_group = 'Construction work'
+WHERE item_group IS NULL
+  AND item REGEXP 'continuous work|installation fee|installation including|daytime construction';
+ 
+-- Purpose: Rule 3 - laboratory and inspection services. Result: 24 rows.
+UPDATE temp_materials SET item_group = 'Testing'
+WHERE item_group IS NULL
+  AND item LIKE 'Quality management%';
+ 
+-- Purpose: Rule 4 - products (names starting "Product." / "Products." /
+-- "Product:"). Result: 310 rows.
+UPDATE temp_materials SET item_group = 'Material'
+WHERE item_group IS NULL
+  AND item REGEXP '^(Product|Products)[.:]';
+ 
+-- Purpose: Rule 5 - machines, rented with an operator. Result: 26 rows.
+UPDATE temp_materials SET item_group = 'Machine'
+WHERE item_group IS NULL
+  AND item REGEXP 'operator|crusher|wheeled|trailer|crawler';
+ 
+-- Purpose: Rule 6 - workers hired per day or hour. ^engineer$ matches only
+-- the exact name "Engineer", not "engineering". Result: 35 rows.
+UPDATE temp_materials SET item_group = 'Labour'
+WHERE item_group IS NULL
+  AND item REGEXP 'technician|workers|^engineer$|plasterer';
+ 
+-- Purpose: Rule 7 - raw materials without "Product" in the name
+-- (e.g. "Structural concrete"), excluding services such as demolition or
+-- paving that mention a material. Result: 24 rows.
+UPDATE temp_materials SET item_group = 'Material'
+WHERE item_group IS NULL
+  AND item REGEXP 'concrete|mortar|backfill|rebar|clay|formwork'
+  AND item NOT REGEXP 'remov|demolition|excavation|paving|pavement|transport|wages|processing|embedded';
+ 
+-- Purpose: Rule 8 - everything left is construction work (excavation,
+-- demolition, transport, scaffolding erection ...). Result: 32 rows.
+UPDATE temp_materials SET item_group = 'Construction work'
+WHERE item_group IS NULL;
+ 
+-- Verify
+-- Purpose: count items per group. Result: Material 334, Construction work 37,
+-- Labour 35, Machine 26, Testing 24, Unidentified 2 (total 458).
+SELECT item_group, COUNT(*) AS items
+FROM temp_materials
+GROUP BY item_group
+ORDER BY items DESC;
+ 
+-- Purpose: review construction work by eye (includes both scaffolding items).
+SELECT item, unit FROM temp_materials WHERE item_group = 'Construction work';
+ 
+ 
+-- 2.5c Categories ----------------------------------------------------------
+ 
+-- Purpose: all machines share one category.
+UPDATE temp_materials SET category_name = 'Machines'
+WHERE item_group = 'Machine';
+ 
+-- Purpose: pipes first, so "Reinforced concrete pipe" is a pipe, not concrete.
+-- "Underground distribution pipelines. Backfill. Sand" is sand, so it is excluded.
+UPDATE temp_materials SET category_name = 'Pipes & Drainage'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'pipe|drain|culvert|trench cover|sump|grating|water intake|waterstop|air duct|anti-vibration'
+  AND item NOT LIKE 'Underground distribution%';
+ 
+-- Purpose: protective, warning and temporary site equipment.
+UPDATE temp_materials SET category_name = 'Safety & Site Equipment'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'occupational|fire|extinguish|traffic cone|construction sign|warning|guardrail|chevaux|notice board|divider|construction fence|access control|monitoring|temporary facilities|temporary construction facilities|temporary conducting|safety net';
+ 
+-- Purpose: planting and slope-protection materials.
+UPDATE temp_materials SET category_name = 'Landscaping'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'grass|fertilizer|planting|seed|straw|slope protection|earth bags|snake cage|seaweed';
+ 
+-- Purpose: formwork, plywood and timber.
+UPDATE temp_materials SET category_name = 'Formwork & Timber'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'formwork|plywood|timber|clamps';
+ 
+-- Purpose: aggregates, stone, sand, soil and geotextiles.
+-- [.] means a real dot.
+UPDATE temp_materials SET category_name = 'Aggregates & Soil'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'aggregate|granule|sand|gravel|pebble|backfill|soil|clay|geotextile|crushed stone|stone dump|stone[.] block|small stones|washed stone|stone powder';
+ 
+-- Purpose: asphalt, paving and road marking. "floor tile" (not "tile")
+-- keeps geotextiles and wall tiles out.
+UPDATE temp_materials SET category_name = 'Asphalt & Paving'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'asphalt|paving|floor tile|brick|marking|glass beads|polyester|edge stone|toner|sidewalk|road|surfacing';
+ 
+-- Purpose: concrete, cement, mortar and admixtures.
+UPDATE temp_materials SET category_name = 'Concrete & Cement'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'concrete|cement|mortar|shrinkage|admixture|early strength';
+ 
+-- Purpose: steel, rebar, wire, fasteners and other metals.
+UPDATE temp_materials SET category_name = 'Steel & Metal'
+WHERE item_group = 'Material' AND category_name IS NULL
+  AND item REGEXP 'steel|metal|iron|rebar|wire|bolt|nut|screw|beam|aluminum|tendon|anchor|sheet pile';
+ 
+-- Purpose: every remaining material gets "Others", so none is left without
+-- a category.
+UPDATE temp_materials SET category_name = 'Others'
+WHERE item_group = 'Material' AND category_name IS NULL;
+ 
+-- Verify
+-- Purpose: count items per category. Result: Pipes & Drainage 68,
+-- Safety & Site Equipment 62, Concrete & Cement 46, Steel & Metal 39,
+-- Aggregates & Soil 37, Asphalt & Paving 31, Machines 26, Others 20,
+-- Landscaping 18, Formwork & Timber 13 (total 360).
+SELECT category_name, COUNT(*) AS items
+FROM temp_materials
+WHERE category_name IS NOT NULL
+GROUP BY category_name
+ORDER BY items DESC;
+ 
+-- Purpose: confirm every in-scope item has a category. Result: 0.
+SELECT COUNT(*) AS in_scope_without_category
+FROM temp_materials
+WHERE item_group IN ('Material', 'Machine') AND category_name IS NULL;
+ 
+ 
+-- 2.5d Rentable items --------------------------------------------------------
+ 
+-- Purpose: machines are always rented (priced per Hour, Day or Trip).
+UPDATE temp_materials SET is_rentable = TRUE
+WHERE item_group = 'Machine';
+ 
+-- Purpose: site equipment whose name shows it is rented or temporary.
+-- The space in ' movable' avoids matching "Non-removable" formwork, which
+-- stays in the building and is bought. Items without such evidence
+-- (e.g. traffic cones) stay "for sale"; construction work is never marked.
+UPDATE temp_materials SET is_rentable = TRUE
+WHERE item_group = 'Material'
+  AND item REGEXP 'rental|depreciation|temporary| movable|mobile';
+ 
+-- Verify
+-- Purpose: list rentable materials. Result: 10 (rental signs, warning
+-- lights, mobile notice board, movable barriers, temporary toilets,
+-- temporary lighting, conductor baton, 2 steel sheet piles).
+SELECT category_name, unit, item
+FROM temp_materials
+WHERE is_rentable AND item_group = 'Material'
+ORDER BY category_name, item;
+ 
+-- Purpose: rentable vs for sale. Result: Material 10 / 324, Machine 26 / 0.
+SELECT item_group, SUM(is_rentable) AS rentable, SUM(NOT is_rentable) AS for_sale
+FROM temp_materials
+WHERE item_group IN ('Material', 'Machine')
+GROUP BY item_group;
+ 
+ 
+-- 2.5e Reject transactions for out-of-scope items ----------------------------
+ 
+-- Find
+-- Purpose: view of items Project Flow does not offer.
+CREATE OR REPLACE VIEW v_out_of_scope_items AS
+SELECT material_id, item, unit, item_group
+FROM temp_materials
+WHERE item_group NOT IN ('Material', 'Machine');
+ 
+-- Purpose: count them. Result: Construction work 37, Labour 35, Testing 24,
+-- Unidentified 2 (98 items).
+SELECT item_group, COUNT(*) AS items
+FROM v_out_of_scope_items
+GROUP BY item_group
+ORDER BY items DESC;
+ 
+-- Fix
+-- Purpose: label their transactions. A normal JOIN is used because the
+-- matching item is needed to read its group. Result: 8825 rows.
+UPDATE temp_transactions t
+JOIN temp_materials m ON m.material_id = t.material_id
+SET t.reject_reason = 'out-of-scope item'
+WHERE t.reject_reason IS NULL
+  AND m.item_group NOT IN ('Material', 'Machine');
+ 
+-- Verify
+-- Purpose: final rejection report. Result: valid 33305, out-of-scope item
+-- 8825, date before 2000 5198, unknown company_id 2393, unknown
+-- material_id 2226 (total 51947).
+SELECT IFNULL(reject_reason, '(valid)') AS status, COUNT(*) AS transactions
+FROM temp_transactions
+GROUP BY status
+ORDER BY transactions DESC;
+ 
