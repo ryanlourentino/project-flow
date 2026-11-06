@@ -485,8 +485,9 @@ GROUP BY unit_lower
 HAVING spellings > 1;
  
 -- Note: L.㎥, B.㎥ and C.㎥ are different earthwork volume measures, not
--- typos of ㎥, so they are kept. "root" (a mistranslation of 根, used for
--- bars) only appears on rebar test items, which are out of scope.
+-- typos of ㎥, so they are kept. "root" (a literal translation of the
+-- counting word for bars) only appears on rebar test items, which are out
+-- of scope.
  
  
 -- 2.3c Columns that should already be consistent -----------------------
