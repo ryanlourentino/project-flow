@@ -1,0 +1,38 @@
+# Start everything with:  docker compose up --build
+# Reset the database with: docker compose down -v   (deletes the dbStorage volume)
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    ports:
+      - "3307:3306"            # lets MySQL Workbench / DBeaver connect on 127.0.0.1:3307
+    volumes:
+      - dbStorage:/var/lib/mysql
+      # .sql files here run in alphabetical order, but only when dbStorage is empty
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      # TSV files read by "LOAD DATA INFILE '/var/lib/mysql-files/...'" in the ETL
+      - ./db/data:/var/lib/mysql-files:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    ports:
+      - "${APP_PORT}:3000"
+    volumes:
+      - ./public/uploads:/app/public/uploads   # uploaded product photos survive restarts
+
+volumes:
+  dbStorage:

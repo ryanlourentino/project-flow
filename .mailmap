@@ -1,0 +1,4 @@
+# Merges one person's different git names/emails into one identity in "git shortlog" and "git log".
+# Format: Proper Name <canonical email> Commit Name <commit email>
+Ryan L <M11505803@mail.ntust.edu.tw> ryanlourentino <ryanlourentino@gmail.com>
+Ryan L <M11505803@mail.ntust.edu.tw> Ryan L <ryanlourentino@gmail.com>
