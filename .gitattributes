@@ -1,0 +1,4 @@
+# The ETL script reads these files with LINES TERMINATED BY '\r\n'.
+# Never let Git convert their line endings (Windows/Mac autocrlf would break the load).
+*.tsv -text
+* text=auto
