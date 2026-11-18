@@ -16,7 +16,7 @@ services:
       # .sql files here run in alphabetical order, but only when dbStorage is empty
       - ./db/init:/docker-entrypoint-initdb.d:ro
       # TSV files read by "LOAD DATA INFILE '/var/lib/mysql-files/...'" in the ETL
-      - ./db/data:/var/lib/mysql-files:ro
+      - ./db/data:/var/lib/mysql-files
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_ROOT_PASSWORD}"]
       interval: 5s
