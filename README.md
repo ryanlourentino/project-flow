@@ -1,5 +1,5 @@
 # Project Flow
-Software Engineering in Construction Management - Assignment #2
+Software Engineering in Construction Management
 
 ## Student Information
 | Name | Student ID |
@@ -7,6 +7,35 @@ Software Engineering in Construction Management - Assignment #2
 | Ryan Lourentino A. | M11505803 |
 | 羅奕展 | M11505505 |
 
+
+## Run the app
+
+Requires Docker Desktop.
+
+```bash
+git clone https://github.com/ryanlourentino/project-flow.git
+cd project-flow
+cp .env.example .env        # Windows PowerShell: copy .env.example .env
+docker compose up --build
+```
+
+Open http://localhost:3000. The first start builds the database from `db/data` with `db/init/01_etl.sql`
+(this takes a little while). Reset the database with `docker compose down -v`.
+MySQL is also reachable from a database tool at `127.0.0.1:3307` (user and password from `.env`).
+
+## Project structure
+
+```
+app.js            Express entry point (middleware and routers)
+config.js         Settings read from .env
+db.js             Shared MySQL connection pool
+routes/           One router per feature
+middleware/       Shared checks (login, roles)
+views/            Handlebars layouts, partials and pages
+public/           CSS, JS, uploaded photos
+db/               TSV source data and numbered SQL init files
+docs/             ERDs, changelog, team workflow (CONTRIBUTING.md)
+```
 
 ## Priority Legend
 
