@@ -8,7 +8,7 @@
                 <th>Name</th>
                 <th>Description</th>
                 <th class="text-end">Items</th>
-                <th class="text-end">Actions</th>
+                {{#if isAdmin}}<th class="text-end">Actions</th>{{/if}}
             </tr>
         </thead>
         <tbody>
@@ -36,9 +36,10 @@
             </tr>
             {{else}}
             <tr>
-                <td>{{category_name}}</td>
+                <td><a href="/categories/{{category_id}}">{{category_name}}</a></td>
                 <td>{{#if description}}{{description}}{{else}}<span class="text-muted">-</span>{{/if}}</td>
                 <td class="text-end">{{item_count}}</td>
+                {{#if @root.isAdmin}}
                 <td class="text-end">
                     <button type="button" class="btn btn-sm btn-outline-secondary"
                         hx-get="/categories/{{category_id}}/edit" hx-target="#category-list"
@@ -47,12 +48,14 @@
                         hx-target="#category-list" hx-swap="outerHTML" hx-confirm="Delete category {{category_name}}?"
                         {{#unless canDelete}}disabled title="This category still has items" {{/unless}}>Delete</button>
                 </td>
+                {{/if}}
             </tr>
             {{/if}}
             {{/each}}
         </tbody>
     </table>
 
+    {{#if isAdmin}}
     <form class="row g-2" hx-post="/categories" hx-target="#category-list" hx-swap="outerHTML">
         <div class="col-md-3">
             <input type="text" name="name" value="{{newName}}" maxlength="{{nameMax}}" required
@@ -66,4 +69,5 @@
             <button type="submit" class="btn btn-primary">Add category</button>
         </div>
     </form>
+    {{/if}}
 </div>
