@@ -1,0 +1,31 @@
+<div id="category-list">
+    {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+    {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th class="text-end">Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each categories}}
+            <tr>
+                <td>{{category_name}}</td>
+                <td class="text-end">{{item_count}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+
+    <form class="row g-2" hx-post="/categories" hx-target="#category-list" hx-swap="outerHTML">
+        <div class="col-auto flex-grow-1">
+            <input type="text" name="name" value="{{newName}}" maxlength="{{nameMax}}" required
+                placeholder="New category name" class="form-control">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Add category</button>
+        </div>
+    </form>
+</div>
