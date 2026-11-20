@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routers: one file per feature in routes/. Register new ones here.
 app.use('/', require('./routes/index'));
 // app.use('/auth', require('./routes/auth'));
-// app.use('/categories', require('./routes/categories'));
+app.use('/categories', require('./routes/categories'));
 // app.use('/listings', require('./routes/listings'));
 // app.use('/cart', require('./routes/cart'));
 
