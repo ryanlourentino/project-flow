@@ -6,6 +6,7 @@
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Description</th>
                 <th class="text-end">Items</th>
                 <th class="text-end">Actions</th>
             </tr>
@@ -21,6 +22,11 @@
                             autofocus class="form-control form-control-sm">
                     </form>
                 </td>
+                <td>
+                    <input type="text" name="description" form="edit-form" value="{{editDescription}}"
+                        maxlength="{{../descMax}}" placeholder="Description (optional)"
+                        class="form-control form-control-sm">
+                </td>
                 <td class="text-end">{{item_count}}</td>
                 <td class="text-end">
                     <button type="submit" form="edit-form" class="btn btn-sm btn-primary">Save</button>
@@ -31,11 +37,15 @@
             {{else}}
             <tr>
                 <td>{{category_name}}</td>
+                <td>{{#if description}}{{description}}{{else}}<span class="text-muted">-</span>{{/if}}</td>
                 <td class="text-end">{{item_count}}</td>
                 <td class="text-end">
                     <button type="button" class="btn btn-sm btn-outline-secondary"
                         hx-get="/categories/{{category_id}}/edit" hx-target="#category-list"
                         hx-swap="outerHTML">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/categories/{{category_id}}"
+                        hx-target="#category-list" hx-swap="outerHTML" hx-confirm="Delete category {{category_name}}?"
+                        {{#unless canDelete}}disabled title="This category still has items" {{/unless}}>Delete</button>
                 </td>
             </tr>
             {{/if}}
@@ -44,9 +54,13 @@
     </table>
 
     <form class="row g-2" hx-post="/categories" hx-target="#category-list" hx-swap="outerHTML">
-        <div class="col-auto flex-grow-1">
+        <div class="col-md-3">
             <input type="text" name="name" value="{{newName}}" maxlength="{{nameMax}}" required
                 placeholder="New category name" class="form-control">
+        </div>
+        <div class="col-md">
+            <input type="text" name="description" value="{{newDescription}}" maxlength="{{descMax}}"
+                placeholder="Description (optional)" class="form-control">
         </div>
         <div class="col-auto">
             <button type="submit" class="btn btn-primary">Add category</button>
