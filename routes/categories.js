@@ -16,18 +16,23 @@ async function loadCategories() {
   return rows;
 }
 
+// Add the flags the template needs to every category.
+function withFlags(rows, opts = {}) {
+  return rows.map((c) => ({
+    ...c,
+    canDelete: Number(c.item_count) === 0,
+    editing: c.category_id === opts.editId,
+    editValue: opts.editValue ?? c.category_name,
+  }));
+}
+
 // Send only the list fragment (the part HTMX swaps into the page).
 // Options: message / error (shown above the table), newName (kept in the "add" box),
 // editId (the row shown as an edit form) and editValue (the text in its input).
 async function renderList(res, opts = {}) {
-  const categories = (await loadCategories()).map((c) => ({
-    ...c,
-    editing: c.category_id === opts.editId,
-    editValue: opts.editValue ?? c.category_name,
-  }));
   res.render('partials/category-list', {
     layout: false,
-    categories,
+    categories: withFlags(await loadCategories(), opts),
     message: opts.message,
     error: opts.error,
     newName: opts.newName,
@@ -61,7 +66,7 @@ const safe = (handler) => async (req, res) => {
 router.get('/', safe(async (req, res) => {
   res.render('categories/index', {
     title: 'Categories',
-    categories: await loadCategories(),
+        categories: withFlags(await loadCategories()),
     nameMax: NAME_MAX,
   });
 }));
@@ -108,6 +113,32 @@ router.put('/:id(\\d+)', safe(async (req, res) => {
     throw err;
   }
   await renderList(res, { message: `Category renamed to "${name}".` });
+}));
+
+// DELETE (refused while the category still has items)
+router.delete('/:id(\\d+)', safe(async (req, res) => {
+  const id = Number(req.params.id);
+  const [found] = await db.execute(
+    `SELECT c.category_name, COUNT(i.item_id) AS item_count
+       FROM Categories c LEFT JOIN Items i ON i.category_id = c.category_id
+      WHERE c.category_id = ? GROUP BY c.category_id, c.category_name`,
+    [id]
+  );
+  if (found.length === 0) return renderList(res, { error: 'That category no longer exists.' });
+
+  const { category_name: name, item_count: count } = found[0];
+  if (Number(count) > 0) {
+    return renderList(res, { error: `Cannot delete "${name}": it still has ${count} item(s).` });
+  }
+  try {
+    await db.execute('DELETE FROM Categories WHERE category_id = ?', [id]);
+  } catch (err) {
+    if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+      return renderList(res, { error: `Cannot delete "${name}": it is still in use.` });
+    }
+    throw err;
+  }
+  await renderList(res, { message: `Category "${name}" was deleted.` });
 }));
 
 module.exports = router;

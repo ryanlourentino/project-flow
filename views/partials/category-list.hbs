@@ -36,6 +36,9 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary"
                         hx-get="/categories/{{category_id}}/edit" hx-target="#category-list"
                         hx-swap="outerHTML">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/categories/{{category_id}}"
+                        hx-target="#category-list" hx-swap="outerHTML" hx-confirm="Delete category {{category_name}}?"
+                        {{#unless canDelete}}disabled title="This category still has items" {{/unless}}>Delete</button>
                 </td>
             </tr>
             {{/if}}
