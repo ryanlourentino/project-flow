@@ -36,6 +36,23 @@ public/           CSS, JS, uploaded photos
 db/               TSV source data and numbered SQL init files
 docs/             ERDs, changelog, team workflow (CONTRIBUTING.md)
 ```
+## Demo accounts
+
+Every company in the ETL data has an account. Passwords are placeholders for testing only:
+the ETL sets each password to `changeme-<company id>`, stored as a SHA-256 hash.
+
+| Account type | What it can do | Username | Password |
+|---|---|---|---|
+| Admin | Manage categories (add, edit, delete) | `admin` | `admin1234` |
+| Supplier | Browse categories; list materials *(coming soon)* | `superior_foundations_99_28001683` | `changeme-28001683` |
+| Rental | Browse categories; list equipment for rent *(coming soon)* | `atlas_foundations_51794209` | `changeme-51794209` |
+| Contractor | Browse categories; buy materials *(coming soon)* | `central_hardware_03028108` | `changeme-03028108` |
+
+To find another account of a type:
+
+    docker compose exec db mysql -uroot -prootpassword projectflow -e "SELECT username, source_company_id FROM Users WHERE account_type='Supplier' LIMIT 5;"
+
+Its password is `changeme-` followed by its `source_company_id`.
 
 ## Priority Legend
 
