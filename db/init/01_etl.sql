@@ -974,7 +974,78 @@ FROM temp_transactions
 GROUP BY status
 ORDER BY transactions DESC;
  
- 
+ -- ---------------------------------------------------------------------
+-- 2.6 Clean the item names
+-- The raw name starts with a type label ("Product." / "Products:") and
+-- uses ". " between name parts. The label is only needed for the
+-- classification in 2.5, so the clean name goes in a NEW column and the
+-- raw name is kept as evidence.
+-- ---------------------------------------------------------------------
+
+-- Find
+-- Purpose: show how names start. Result: Product. / Products. / Product: ...
+SELECT SUBSTRING_INDEX(item, ' ', 1) AS first_word, COUNT(*) AS items
+FROM temp_materials
+WHERE item_group IN ('Material', 'Machine')
+GROUP BY first_word
+ORDER BY items DESC;
+
+-- Fix
+-- Purpose: column for the display name, starting as a copy of the raw name.
+ALTER TABLE temp_materials ADD COLUMN item_clean VARCHAR(255) NULL;
+
+UPDATE temp_materials SET item_clean = item
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: a) remove the leading "Product." / "Products." / "Product:".
+UPDATE temp_materials
+SET item_clean = REGEXP_REPLACE(item_clean, '^Products?[.:] *', '')
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: b) remove a trailing dot or colon ("Flat top white clay.").
+UPDATE temp_materials
+SET item_clean = REGEXP_REPLACE(item_clean, '[.:] *$', '')
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: c) replace the ". " separator with " - ". A dot followed by a
+-- digit (9.5mm) has no space after it, so decimals are not touched.
+UPDATE temp_materials
+SET item_clean = REPLACE(item_clean, '. ', ' - ')
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: d) tidy spaces and capitalize the first letter.
+UPDATE temp_materials
+SET item_clean = TRIM(REGEXP_REPLACE(item_clean, ' {2,}', ' '))
+WHERE item_group IN ('Material', 'Machine');
+
+UPDATE temp_materials
+SET item_clean = CONCAT(UPPER(LEFT(item_clean, 1)), SUBSTRING(item_clean, 2))
+WHERE item_group IN ('Material', 'Machine');
+
+-- Verify
+-- Purpose: review before and after by eye. Check that no name was cut wrongly.
+SELECT item AS raw_name, item_clean AS clean_name
+FROM temp_materials
+WHERE item_group IN ('Material', 'Machine')
+ORDER BY row_no
+LIMIT 40;
+
+-- Purpose: nothing empty, nothing still starting with Product, nothing too
+-- long for Items.item_name (255). Expected: 0 / 0 / 0.
+SELECT SUM(item_clean IS NULL OR item_clean = '')   AS empty_names,
+       SUM(item_clean REGEXP '^Products?[.:]')      AS still_prefixed,
+       SUM(CHAR_LENGTH(item_clean) > 255)           AS too_long
+FROM temp_materials
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: names that are now identical. The 2 pairs from 2.2 (gravel,
+-- crushed stone) may appear; any new pair means a rule merged two items.
+SELECT item_clean, COUNT(*) AS times
+FROM temp_materials
+WHERE item_group IN ('Material', 'Machine')
+GROUP BY item_clean
+HAVING COUNT(*) > 1;
+
 -- =====================================================================
 -- STEP 3: LOAD
 -- Create the final ERD tables (with keys and constraints) and fill them
@@ -1217,7 +1288,7 @@ INSERT INTO Items (source_material_id, category_id, listed_by, item_name, unit, 
 SELECT m.material_id,
        c.category_id,
        NULL,
-       m.item,
+       m.item_clean,
        m.unit,
        CAST(m.price_avg AS DECIMAL(12,2)),
        m.is_rentable
