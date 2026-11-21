@@ -1,7 +1,9 @@
 const express = require('express');
 const db = require('../db');
+const { requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+const adminOnly = requireRole('Admin'); // only Admin may add, edit or delete
 const NAME_MAX = 50;  // Categories.category_name is VARCHAR(50)
 const DESC_MAX = 255; // Categories.description is VARCHAR(255)
 
@@ -84,7 +86,7 @@ router.get('/', safe(async (req, res) => {
 }));
 
 // CREATE
-router.post('/', safe(async (req, res) => {
+router.post('/', adminOnly, safe(async (req, res) => {
   const keep = { newName: req.body.name, newDescription: req.body.description };
   const { name, error } = cleanName(req.body.name);
   if (error) return renderList(res, { error, ...keep });
@@ -107,16 +109,18 @@ router.post('/', safe(async (req, res) => {
 
 // Fragment only (used by the Cancel button)
 router.get('/list', safe(async (req, res) => {
+  if (!req.get('HX-Request')) return res.redirect('/categories'); // typed in the address bar
   await renderList(res);
 }));
 
 // Show one row as an edit form
-router.get('/:id(\\d+)/edit', safe(async (req, res) => {
+router.get('/:id(\\d+)/edit', adminOnly, safe(async (req, res) => {
+  if (!req.get('HX-Request')) return res.redirect('/categories'); // typed in the address bar
   await renderList(res, { editId: Number(req.params.id) });
 }));
 
 // UPDATE (name and description)
-router.put('/:id(\\d+)', safe(async (req, res) => {
+router.put('/:id(\\d+)', adminOnly, safe(async (req, res) => {
   const id = Number(req.params.id);
   const [found] = await db.execute('SELECT category_id FROM Categories WHERE category_id = ?', [id]);
   if (found.length === 0) return renderList(res, { error: 'That category no longer exists.' });
@@ -143,7 +147,7 @@ router.put('/:id(\\d+)', safe(async (req, res) => {
 }));
 
 // DELETE (refused while the category still has items)
-router.delete('/:id(\\d+)', safe(async (req, res) => {
+router.delete('/:id(\\d+)', adminOnly, safe(async (req, res) => {
   const id = Number(req.params.id);
   const [found] = await db.execute(
     `SELECT c.category_name, COUNT(i.item_id) AS item_count
@@ -166,6 +170,29 @@ router.delete('/:id(\\d+)', safe(async (req, res) => {
     throw err;
   }
   await renderList(res, { message: `Category "${name}" was deleted.` });
+}));
+
+// One category and its items (the marketplace browse page). Everyone who is logged in can see it.
+router.get('/:id(\\d+)', safe(async (req, res) => {
+  const id = Number(req.params.id);
+  const [found] = await db.execute(
+    'SELECT category_id, category_name, description FROM Categories WHERE category_id = ?',
+    [id]
+  );
+  if (found.length === 0) return res.redirect('/categories');
+
+  const [items] = await db.execute(
+    `SELECT item_id, item_name, unit, avg_price, is_rentable
+       FROM Items
+      WHERE category_id = ?
+      ORDER BY item_name`,
+    [id]
+  );
+  res.render('categories/show', {
+    title: found[0].category_name,
+    category: found[0],
+    items,
+  });
 }));
 
 module.exports = router;

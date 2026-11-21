@@ -19,6 +19,7 @@ function redirect(req, res, url) {
 async function loadUser(req, res, next) {
   req.user = null;
   res.locals.user = null;
+  res.locals.isAdmin = false;                       // <-- NEW (line 1)
 
   const id = Number(req.signedCookies[SESSION_COOKIE]);
   if (!Number.isInteger(id) || id <= 0) return next();
@@ -32,6 +33,7 @@ async function loadUser(req, res, next) {
     if (rows[0]) {
       req.user = rows[0];
       res.locals.user = rows[0];
+      res.locals.isAdmin = rows[0].account_type === 'Admin';   // <-- NEW (line 2)
     }
     next();
   } catch (err) {
