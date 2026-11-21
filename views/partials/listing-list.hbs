@@ -1,0 +1,31 @@
+<div id="listing-list">
+    {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+    {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+
+    {{#if listings.length}}
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th class="text-end">{{#if isRental}}Your price per day{{else}}Your price{{/if}}</th>
+                <th class="text-end">Market avg.</th>
+                <th class="text-end">Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each listings}}
+            <tr>
+                <td>{{item_name}} <small class="text-muted">/ {{unit}}</small></td>
+                <td>{{category_name}}</td>
+                <td class="text-end">{{price}}</td>
+                <td class="text-end text-muted">{{avg_price}}</td>
+                <td class="text-end">{{stock}}</td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+    {{else}}
+    <p class="text-muted">You have no listings yet.</p>
+    {{/if}}
+</div>

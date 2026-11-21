@@ -3,7 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const { engine } = require('express-handlebars');
 const config = require('./config');
-const { loadUser } = require('./middleware/auth');
+const { loadUser, requireLogin, requireRole } = require('./middleware/auth');
 
 const app = express();
 
@@ -23,7 +23,7 @@ app.use('/', require('./routes/auth'));                 // /, /login, /logout
 app.use('/dashboard', require('./routes/dashboard'));
 // app.use('/auth', require('./routes/auth'));
 app.use('/categories', require('./routes/categories'));
-// app.use('/listings', require('./routes/listings'));
+app.use('/listings', requireRole('Supplier', 'Rental'), require('./routes/listings'));
 // app.use('/cart', require('./routes/cart'));
 
 app.listen(3000, () => {
