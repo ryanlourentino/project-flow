@@ -1,24 +1,82 @@
 <div id="listing-results">
+    {{#if resultsError}}<div class="alert alert-danger" role="alert">{{resultsError}}</div>{{/if}}
+    {{#if resultsMessage}}<div class="alert alert-success" role="status">{{resultsMessage}}</div>{{/if}}
+
     {{#if totalCount}}
     {{#if matchCount}}
     <p class="text-muted small mb-2">
         Showing {{fromRow}}-{{toRow}} of {{matchCount}}{{#if q}} matching "<strong>{{q}}</strong>"{{/if}}
         &middot; {{totalCount}} listings in total
     </p>
+    {{!-- The current page, so Edit / Save / Cancel return to the same page. --}}
+    <input type="hidden" id="listing-current-page" name="page" value="{{page}}">
+
     <div class="card shadow-sm">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" hx-target="#listing-results" hx-swap="outerHTML"
+                hx-include="#listing-search, #listing-current-page">
                 <thead class="table-light">
                     <tr class="small text-uppercase text-nowrap">
                         <th class="ps-3">Item</th>
                         <th>Category</th>
                         <th class="text-end">{{#if isRental}}Price / day{{else}}Price{{/if}}</th>
                         <th class="text-end">Stock</th>
-                        <th class="pe-3">Terms</th>
+                        <th>Terms</th>
+                        <th class="pe-3 text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#each listings}}
+                    {{#if editing}}
+                    <tr class="table-primary">
+                        <td colspan="6" class="px-3">
+                            <form hx-put="/listings/{{listing_id}}" class="row g-2 align-items-end py-2">
+                                <div class="col-12">
+                                    <span class="fw-medium">{{item_name}}</span>
+                                    <span class="small text-muted">per {{unit}} &middot; {{category_name}} &middot; avg.
+                                        {{avg_price}}</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="edit-price" class="form-label small fw-semibold">{{#if
+                                        @root.isRental}}Price per day{{else}}Price{{/if}}</label>
+                                    <input id="edit-price" type="number" name="price" value="{{editPrice}}" min="0.01"
+                                        step="0.01" required autofocus class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="edit-stock" class="form-label small fw-semibold">Stock</label>
+                                    <input id="edit-stock" type="number" name="stock" value="{{editStock}}" min="0"
+                                        max="{{@root.stockMax}}" step="1" required class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="edit-min-order" class="form-label small fw-semibold">Minimum
+                                        order</label>
+                                    <input id="edit-min-order" type="number" name="min_order" value="{{editMinOrder}}"
+                                        min="1" max="{{@root.stockMax}}" step="1" required
+                                        class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="edit-lead-days" class="form-label small fw-semibold">Lead time
+                                        (days)</label>
+                                    <input id="edit-lead-days" type="number" name="lead_days" value="{{editLeadDays}}"
+                                        min="0" max="{{@root.leadMax}}" step="1" required
+                                        class="form-control form-control-sm">
+                                </div>
+                                <div class="col-12">
+                                    <label for="edit-description" class="form-label small fw-semibold">Description <span
+                                            class="text-muted">(optional)</span></label>
+                                    <textarea id="edit-description" name="description" rows="2"
+                                        maxlength="{{@root.descMax}}"
+                                        class="form-control form-control-sm">{{editDescription}}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        hx-get="/listings/results">Cancel</button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {{else}}
                     <tr>
                         <td class="ps-3">
                             <div class="fw-medium">{{item_name}}</div>
@@ -39,12 +97,17 @@
                         <td class="text-end">
                             {{#if stock}}{{stock}}{{else}}<span class="badge text-bg-danger">Sold out</span>{{/if}}
                         </td>
-                        <td class="pe-3 small text-nowrap">
+                        <td class="small text-nowrap">
                             <div>Min. order {{min_order}}</div>
                             <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day
                                 delivery{{/if}}</div>
                         </td>
+                        <td class="pe-3 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                hx-get="/listings/{{listing_id}}/edit">Edit</button>
+                        </td>
                     </tr>
+                    {{/if}}
                     {{/each}}
                 </tbody>
             </table>

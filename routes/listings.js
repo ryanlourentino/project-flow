@@ -9,6 +9,7 @@ const LEAD_MAX = 365;      // longest lead time in days
 const DESC_MAX = 500;      // Listings.description is VARCHAR(500)
 const PAGE_SIZE = 10;      // listings per page
 const PAGE_WINDOW = 3;     // page-number buttons shown at once (e.g. 1 2 3)
+const LIMITS = { stockMax: STOCK_MAX, leadMax: LEAD_MAX, descMax: DESC_MAX }; // for the inputs' max/maxlength
 
 // Runs before every route in this file: tells the views whether prices are per day.
 router.use((req, res, next) => {
@@ -40,7 +41,8 @@ function buildPager(page, totalPages) {
 }
 
 // READ: one page of the seller's listings, optionally filtered by a search text.
-async function loadResults(sellerId, rawQuery, rawPage) {
+// edit = { id, values }: show that listing as an edit form (values = what the seller typed, after an error).
+async function loadResults(sellerId, rawQuery, rawPage, edit = {}) {
   const q = String(rawQuery ?? '').trim().slice(0, 100);
   // In LIKE, % and _ are wildcards; a backslash makes them normal characters.
   const like = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
@@ -73,7 +75,20 @@ async function loadResults(sellerId, rawQuery, rawPage) {
 
   return {
     q,
-    listings,
+    page,
+    listings: listings.map((l) => {
+      if (l.listing_id !== edit.id) return l;
+      const typed = edit.values || {};
+      return {
+        ...l,
+        editing: true,
+        editPrice: typed.price ?? l.price,
+        editStock: typed.stock ?? l.stock,
+        editMinOrder: typed.min_order ?? l.min_order,
+        editLeadDays: typed.lead_days ?? l.lead_days,
+        editDescription: typed.description ?? l.description ?? '',
+      };
+    }),
     totalCount: Number(total),
     matchCount: Number(matches),
     fromRow: offset + 1,
@@ -126,15 +141,38 @@ async function formData(req, opts = {}) {
     newMinOrder: opts.newMinOrder ?? 1, // defaults for an empty form
     newLeadDays: opts.newLeadDays ?? 0,
     newDescription: opts.newDescription,
-    stockMax: STOCK_MAX,
-    leadMax: LEAD_MAX,
-    descMax: DESC_MAX,
+    ...LIMITS,
   };
 }
 
 // The form and the first page of all listings (no search).
 async function pageData(req, opts = {}) {
   return { ...(await formData(req, opts)), ...(await loadResults(req.user.user_id, '', 1)) };
+}
+
+// Send only the results part: info line, table, page buttons (after search, paging, edit).
+// opts: q and page (keep the seller's place), edit, message / error (shown above the table).
+async function renderResults(req, res, opts = {}) {
+  res.render('partials/listing-results', {
+    layout: false,
+    ...LIMITS,
+    ...(await loadResults(req.user.user_id, opts.q, opts.page, opts.edit)),
+    resultsMessage: opts.message,
+    resultsError: opts.error,
+  });
+}
+
+// Find one of the seller's OWN listings. Another seller's listing id gives "not found",
+// so nobody can see or change someone else's listing by typing its id.
+async function findOwnListing(req, id) {
+  const [rows] = await db.execute(
+    `SELECT l.listing_id, i.item_name
+       FROM Listings l
+       JOIN Items i ON i.item_id = l.item_id
+      WHERE l.listing_id = ? AND l.seller_id = ?`,
+    [id, req.user.user_id]
+  );
+  return rows[0];
 }
 
 // Send the form + list fragment (after adding a listing).
@@ -167,6 +205,21 @@ function cleanDescription(raw) {
   return { description: text || null };
 }
 
+// Price, stock, minimum order, lead time and description: the same rules for adding and editing.
+function cleanTerms(body) {
+  const { price, error: priceError } = cleanPrice(body.price);
+  if (priceError) return { error: priceError };
+  const { value: stock, error: stockError } = cleanWhole(body.stock, 'Stock', 0, STOCK_MAX);
+  if (stockError) return { error: stockError };
+  const { value: minOrder, error: minError } = cleanWhole(body.min_order, 'Minimum order', 1, STOCK_MAX);
+  if (minError) return { error: minError };
+  const { value: leadDays, error: leadError } = cleanWhole(body.lead_days, 'Lead time', 0, LEAD_MAX);
+  if (leadError) return { error: leadError };
+  const { description, error: descError } = cleanDescription(body.description);
+  if (descError) return { error: descError };
+  return { terms: { price, stock, minOrder, leadDays, description } };
+}
+
 // Wrap every handler: an unexpected error is logged and a short message is sent instead of crashing.
 const safe = (handler) => async (req, res) => {
   try {
@@ -182,12 +235,10 @@ router.get('/', safe(async (req, res) => {
   res.render('listings/index', { title: 'My listings', ...(await pageData(req)) });
 }));
 
-// Search and page buttons: only the results part (HTMX swaps it).
+// Search, page buttons and Cancel: only the results part (HTMX swaps it).
 router.get('/results', safe(async (req, res) => {
-  res.render('partials/listing-results', {
-    layout: false,
-    ...(await loadResults(req.user.user_id, req.query.q, req.query.page)),
-  });
+  if (!req.get('HX-Request')) return res.redirect('/listings'); // typed in the address bar
+  await renderResults(req, res, { q: req.query.q, page: req.query.page });
 }));
 
 // The <option>s of the item dropdown, after a category is chosen (HTMX puts them into the <select>).
@@ -222,22 +273,14 @@ router.post('/', safe(async (req, res) => {
   }
   const name = items[0].item_name;
 
-  const { price, error: priceError } = cleanPrice(req.body.price);
-  if (priceError) return renderPage(req, res, { error: priceError, ...keep });
-  const { value: stock, error: stockError } = cleanWhole(req.body.stock, 'Stock', 0, STOCK_MAX);
-  if (stockError) return renderPage(req, res, { error: stockError, ...keep });
-  const { value: minOrder, error: minError } = cleanWhole(req.body.min_order, 'Minimum order', 1, STOCK_MAX);
-  if (minError) return renderPage(req, res, { error: minError, ...keep });
-  const { value: leadDays, error: leadError } = cleanWhole(req.body.lead_days, 'Lead time', 0, LEAD_MAX);
-  if (leadError) return renderPage(req, res, { error: leadError, ...keep });
-  const { description, error: descError } = cleanDescription(req.body.description);
-  if (descError) return renderPage(req, res, { error: descError, ...keep });
+  const { terms, error } = cleanTerms(req.body);
+  if (error) return renderPage(req, res, { error, ...keep });
 
   try {
     await db.execute(
       `INSERT INTO Listings (item_id, seller_id, price, stock, min_order, lead_days, description)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [itemId, req.user.user_id, price, stock, minOrder, leadDays, description]
+      [itemId, req.user.user_id, terms.price, terms.stock, terms.minOrder, terms.leadDays, terms.description]
     );
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
@@ -246,6 +289,37 @@ router.post('/', safe(async (req, res) => {
     throw err;
   }
   await renderPage(req, res, { message: `"${name}" is now listed.` });
+}));
+
+// Show one row as an edit form
+router.get('/:id(\\d+)/edit', safe(async (req, res) => {
+  if (!req.get('HX-Request')) return res.redirect('/listings'); // typed in the address bar
+  const where = { q: req.query.q, page: req.query.page };
+  const listing = await findOwnListing(req, Number(req.params.id));
+  if (!listing) return renderResults(req, res, { ...where, error: 'That listing no longer exists.' });
+  await renderResults(req, res, { ...where, edit: { id: listing.listing_id } });
+}));
+
+// UPDATE (only the seller's own listing; the item itself cannot change)
+router.put('/:id(\\d+)', safe(async (req, res) => {
+  const where = { q: req.body.q, page: req.body.page };
+  const listing = await findOwnListing(req, Number(req.params.id));
+  if (!listing) return renderResults(req, res, { ...where, error: 'That listing no longer exists.' });
+
+  const { terms, error } = cleanTerms(req.body);
+  if (error) {
+    // Keep the row open with what the seller typed, so they only fix the wrong field.
+    return renderResults(req, res, { ...where, error, edit: { id: listing.listing_id, values: req.body } });
+  }
+
+  await db.execute(
+    `UPDATE Listings
+        SET price = ?, stock = ?, min_order = ?, lead_days = ?, description = ?
+      WHERE listing_id = ? AND seller_id = ?`,
+    [terms.price, terms.stock, terms.minOrder, terms.leadDays, terms.description,
+     listing.listing_id, req.user.user_id]
+  );
+  await renderResults(req, res, { ...where, message: `"${listing.item_name}" was updated.` });
 }));
 
 module.exports = router;
