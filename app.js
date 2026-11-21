@@ -24,6 +24,7 @@ app.use('/dashboard', require('./routes/dashboard'));
 // app.use('/auth', require('./routes/auth'));
 app.use('/categories', requireLogin, require('./routes/categories'));
 app.use('/listings', requireRole('Supplier', 'Rental'), require('./routes/listings'));
+app.use('/items', requireLogin, require('./routes/items'));
 // app.use('/cart', require('./routes/cart'));
 
 app.listen(3000, () => {
