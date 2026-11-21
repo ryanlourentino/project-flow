@@ -1,0 +1,44 @@
+<div id="category-items">
+  <p class="text-muted small mb-2">
+    Showing {{items.length}} of {{totalItems}} products{{#if q}} matching "<strong>{{q}}</strong>"{{/if}}
+    &middot; {{offeredCount}} offered by sellers. Click a product to compare offers.
+  </p>
+
+  {{#if items.length}}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr class="small text-uppercase text-nowrap">
+            <th class="ps-3">Product</th>
+            <th>Type</th>
+            <th class="text-end">Market avg.</th>
+            <th class="text-end">Lowest offer</th>
+            <th class="pe-3 text-end">Sellers</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each items}}
+          <tr>
+            <td class="ps-3">
+              <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
+              <div class="small text-muted">per {{unit}}</div>
+            </td>
+            <td>{{#if is_rentable}}<span class="badge rounded-pill text-bg-light border fw-normal">Rental</span>{{else}}<span class="badge rounded-pill text-bg-light border fw-normal">Material</span>{{/if}}</td>
+            <td class="text-end text-muted">{{avg_price}}</td>
+            <td class="text-end">
+              {{#if offer_count}}<span class="fw-semibold">{{lowest_price}}</span>{{else}}<span class="text-muted">-</span>{{/if}}
+            </td>
+            <td class="pe-3 text-end">
+              {{#if offer_count}}<span class="badge rounded-pill text-bg-dark">{{offer_count}}</span>{{else}}<span class="small text-muted">None yet</span>{{/if}}
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{else}}
+  <p class="text-muted">No products match "<strong>{{q}}</strong>".</p>
+  {{/if}}
+</div>

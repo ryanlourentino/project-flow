@@ -18,6 +18,16 @@ app.use(cookieParser(config.cookieSecret));      // signed cookies
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(loadUser); // who is logged in? (req.user and res.locals.user)
 
+// Which menu tab is active (views/partials/menu.hbs underlines it).
+app.use((req, res, next) => {
+  res.locals.nav = {
+    dashboard: req.path.startsWith('/dashboard'),
+    categories: req.path.startsWith('/categories') || req.path.startsWith('/items'),
+    products: req.path.startsWith('/listings'),
+  };
+  next();
+});
+
 // Routers: one file per feature in routes/. Register new ones here.
 app.use('/', require('./routes/auth'));                 // /, /login, /logout
 app.use('/dashboard', require('./routes/dashboard'));

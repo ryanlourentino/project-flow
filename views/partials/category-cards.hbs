@@ -1,0 +1,25 @@
+<div id="category-cards">
+  {{#if q}}<p class="text-muted small">{{categories.length}} categories match "<strong>{{q}}</strong>"</p>{{/if}}
+
+  {{#if categories.length}}
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+    {{#each categories}}
+    <div class="col">
+      <a href="{{link}}" class="card h-100 category-card text-decoration-none text-reset">
+        <div class="card-body d-flex flex-column">
+          <h2 class="card-title mb-1">{{category_name}}</h2>
+          <p class="small text-muted flex-grow-1">{{description}}</p>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="badge rounded-pill text-bg-light border fw-normal">{{item_count}} products</span>
+            {{#if offered_count}}<span class="badge rounded-pill text-bg-dark fw-normal">{{offered_count}} with offers</span>{{/if}}
+            {{#if match_count}}<span class="badge rounded-pill text-bg-light border border-dark fw-normal">{{match_count}} matching</span>{{/if}}
+          </div>
+        </div>
+      </a>
+    </div>
+    {{/each}}
+  </div>
+  {{else}}
+  <p class="text-muted">No categories or products match "<strong>{{q}}</strong>".</p>
+  {{/if}}
+</div>

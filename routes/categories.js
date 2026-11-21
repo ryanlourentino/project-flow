@@ -61,6 +61,66 @@ function cleanDescription(raw) {
   return { description: description || null };
 }
 
+// Search text: trimmed, at most 100 characters, plus a LIKE pattern for "contains".
+// In LIKE, % and _ are wildcards; a backslash makes them normal characters.
+function searchPattern(raw) {
+  const q = String(raw ?? '').trim().slice(0, 100);
+  return { q, like: `%${q.replace(/[\\%_]/g, '\\$&')}%` };
+}
+
+// BROWSE: category cards. A search matches the category name, its description,
+// or the name of a product inside it (match_count = how many products match).
+async function loadCategoryCards(rawQuery) {
+  const { q, like } = searchPattern(rawQuery);
+  const [rows] = await db.execute(
+    `SELECT c.category_id, c.category_name, c.description,
+            COUNT(DISTINCT i.item_id) AS item_count,
+            COUNT(DISTINCT l.item_id) AS offered_count,
+            COUNT(DISTINCT CASE WHEN ? <> '' AND i.item_name LIKE ? THEN i.item_id END) AS match_count
+       FROM Categories c
+       LEFT JOIN Items i    ON i.category_id = c.category_id
+       LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
+      GROUP BY c.category_id, c.category_name, c.description
+     HAVING ? = '' OR c.category_name LIKE ? OR c.description LIKE ? OR match_count > 0
+      ORDER BY c.category_name`,
+    [q, like, q, like, like]
+  );
+  return {
+    q,
+    categories: rows.map((c) => ({
+      ...c,
+      // If products matched, open the category with the same search already filled in.
+      link: `/categories/${c.category_id}` + (Number(c.match_count) > 0 ? `?q=${encodeURIComponent(q)}` : ''),
+    })),
+  };
+}
+
+// The products of one category, optionally filtered by a search text. For each product:
+// how many sellers offer it in stock, and the lowest price among them.
+async function loadCategoryItems(categoryId, rawQuery) {
+  const { q, like } = searchPattern(rawQuery);
+  const [[{ total }]] = await db.execute('SELECT COUNT(*) AS total FROM Items WHERE category_id = ?', [categoryId]);
+
+  // LEFT JOIN keeps products that nobody sells yet (offer_count 0, lowest_price NULL).
+  // "AND l.stock > 0" is in the ON part, so sold-out offers are left out of the count and the minimum.
+  const [items] = await db.execute(
+    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable,
+            COUNT(l.listing_id) AS offer_count, MIN(l.price) AS lowest_price
+       FROM Items i
+       LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
+      WHERE i.category_id = ? AND (? = '' OR i.item_name LIKE ?)
+      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable
+      ORDER BY COUNT(l.listing_id) = 0, i.item_name`,
+    [categoryId, q, like]
+  );
+  return {
+    q,
+    items,
+    totalItems: Number(total),
+    offeredCount: items.filter((i) => Number(i.offer_count) > 0).length,
+  };
+}
+
 // Wrap every handler: an unexpected error is logged and shown as a message instead of crashing.
 const safe = (handler) => async (req, res) => {
   try {
@@ -75,10 +135,21 @@ const safe = (handler) => async (req, res) => {
   }
 };
 
-// Full page
+// BROWSE page: category cards with a search box (everyone who is logged in)
 router.get('/', safe(async (req, res) => {
-  res.render('categories/index', {
-    title: 'Categories',
+  res.render('categories/index', { title: 'Categories', ...(await loadCategoryCards(req.query.q)) });
+}));
+
+// Search box on the browse page: only the cards (HTMX swaps them)
+router.get('/search', safe(async (req, res) => {
+  if (!req.get('HX-Request')) return res.redirect('/categories'); // typed in the address bar
+  res.render('partials/category-cards', { layout: false, ...(await loadCategoryCards(req.query.q)) });
+}));
+
+// MANAGE page: the table with add / edit / delete (Admin only)
+router.get('/manage', adminOnly, safe(async (req, res) => {
+  res.render('categories/manage', {
+    title: 'Manage categories',
     categories: withFlags(await loadCategories()),
     nameMax: NAME_MAX,
     descMax: DESC_MAX,
@@ -109,13 +180,13 @@ router.post('/', adminOnly, safe(async (req, res) => {
 
 // Fragment only (used by the Cancel button)
 router.get('/list', safe(async (req, res) => {
-  if (!req.get('HX-Request')) return res.redirect('/categories'); // typed in the address bar
+  if (!req.get('HX-Request')) return res.redirect('/categories/manage'); // typed in the address bar
   await renderList(res);
 }));
 
 // Show one row as an edit form
 router.get('/:id(\\d+)/edit', adminOnly, safe(async (req, res) => {
-  if (!req.get('HX-Request')) return res.redirect('/categories'); // typed in the address bar
+  if (!req.get('HX-Request')) return res.redirect('/categories/manage'); // typed in the address bar
   await renderList(res, { editId: Number(req.params.id) });
 }));
 
@@ -172,8 +243,8 @@ router.delete('/:id(\\d+)', adminOnly, safe(async (req, res) => {
   await renderList(res, { message: `Category "${name}" was deleted.` });
 }));
 
-// One category and its items (the marketplace browse page). Everyone who is logged in can see it.
-// For each item: how many sellers offer it in stock, and the lowest price among them.
+// One category and its products, with a search box (everyone who is logged in).
+// ?q=... (from a search on the browse page) fills in the search box.
 router.get('/:id(\\d+)', safe(async (req, res) => {
   const id = Number(req.params.id);
   const [found] = await db.execute(
@@ -181,24 +252,19 @@ router.get('/:id(\\d+)', safe(async (req, res) => {
     [id]
   );
   if (found.length === 0) return res.redirect('/categories');
-
-  // LEFT JOIN keeps items that nobody sells yet (offer_count 0, lowest_price NULL).
-  // "AND l.stock > 0" is in the ON part, so sold-out offers are left out of the count and the minimum.
-  const [items] = await db.execute(
-    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable,
-            COUNT(l.listing_id) AS offer_count, MIN(l.price) AS lowest_price
-       FROM Items i
-       LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
-      WHERE i.category_id = ?
-      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable
-      ORDER BY COUNT(l.listing_id) = 0, i.item_name`,
-    [id]
-  );
   res.render('categories/show', {
     title: found[0].category_name,
     category: found[0],
-    items,
-    offeredCount: items.filter((i) => Number(i.offer_count) > 0).length,
+    ...(await loadCategoryItems(id, req.query.q)),
+  });
+}));
+
+// Search box on a category page: only the product table (HTMX swaps it)
+router.get('/:id(\\d+)/items', safe(async (req, res) => {
+  if (!req.get('HX-Request')) return res.redirect(`/categories/${Number(req.params.id)}`);
+  res.render('partials/category-items', {
+    layout: false,
+    ...(await loadCategoryItems(Number(req.params.id), req.query.q)),
   });
 }));
 

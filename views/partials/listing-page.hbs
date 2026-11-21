@@ -1,73 +1,69 @@
 <div id="listing-page">
-    {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
-    {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+  {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+  {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
 
-    <div class="card border-primary-subtle shadow-sm mb-4">
-        <div class="card-header bg-primary-subtle text-primary-emphasis fw-semibold">Add a listing</div>
-        <div class="card-body bg-body-tertiary">
-            {{#if categoryOptions.length}}
-            <form class="row g-3" hx-post="/listings" hx-target="#listing-page" hx-swap="outerHTML">
-                <div class="col-md-4">
-                    <label for="new-category" class="form-label small fw-semibold">Category</label>
-                    <select id="new-category" name="category_id" required class="form-select"
-                        hx-get="/listings/item-options" hx-target="#new-item" hx-swap="innerHTML">
-                        <option value="">Choose a category...</option>
-                        {{#each categoryOptions}}
-                        <option value="{{category_id}}" {{#if selected}}selected{{/if}}>{{category_name}} ({{available}}
-                            items)</option>
-                        {{/each}}
-                    </select>
-                </div>
-                <div class="col-md-8">
-                    <label for="new-item" class="form-label small fw-semibold">Item</label>
-                    <select id="new-item" name="item_id" required class="form-select">
-                        {{> listing-item-options}}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="new-price" class="form-label small fw-semibold">{{#if isRental}}Price per
-                        day{{else}}Price{{/if}}</label>
-                    <input id="new-price" type="number" name="price" value="{{newPrice}}" min="0.01" step="0.01"
-                        required class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label for="new-stock" class="form-label small fw-semibold">Stock</label>
-                    <input id="new-stock" type="number" name="stock" value="{{newStock}}" min="0" max="{{stockMax}}"
-                        step="1" required class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label for="new-min-order" class="form-label small fw-semibold">Minimum order</label>
-                    <input id="new-min-order" type="number" name="min_order" value="{{newMinOrder}}" min="1"
-                        max="{{stockMax}}" step="1" required class="form-control">
-                    <div class="form-text">Smallest quantity per order.</div>
-                </div>
-                <div class="col-md-3">
-                    <label for="new-lead-days" class="form-label small fw-semibold">Lead time (days)</label>
-                    <input id="new-lead-days" type="number" name="lead_days" value="{{newLeadDays}}" min="0"
-                        max="{{leadMax}}" step="1" required class="form-control">
-                    <div class="form-text">Days until delivery. 0 = same day.</div>
-                </div>
-                <div class="col-12">
-                    <label for="new-description" class="form-label small fw-semibold">Description <span
-                            class="text-muted">(optional)</span></label>
-                    <textarea id="new-description" name="description" rows="2" maxlength="{{descMax}}"
-                        class="form-control"
-                        placeholder="Brand, grade, certification, delivery area...">{{newDescription}}</textarea>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Add listing</button>
-                </div>
-            </form>
-            {{else}}
-            <p class="text-muted mb-0">You already list every item you can sell.</p>
-            {{/if}}
+  <div class="card border-primary-subtle shadow-sm mb-4">
+    <div class="card-header bg-primary-subtle text-primary-emphasis fw-semibold">Add a product</div>
+    <div class="card-body bg-body-tertiary">
+      {{#if categoryOptions.length}}
+      <form class="row g-3" hx-post="/listings" hx-target="#listing-page" hx-swap="outerHTML">
+        <div class="col-md-4">
+          <label for="new-category" class="form-label small fw-semibold">Category</label>
+          <select id="new-category" name="category_id" required class="form-select"
+                  hx-get="/listings/item-options" hx-target="#new-item" hx-swap="innerHTML">
+            <option value="">Choose a category...</option>
+            {{#each categoryOptions}}
+            <option value="{{category_id}}" {{#if selected}}selected{{/if}}>{{category_name}} ({{available}} items)</option>
+            {{/each}}
+          </select>
         </div>
+        <div class="col-md-8">
+          <label for="new-item" class="form-label small fw-semibold">Item</label>
+          <select id="new-item" name="item_id" required class="form-select">
+            {{> listing-item-options}}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="new-price" class="form-label small fw-semibold">{{#if isRental}}Rental price{{else}}Price{{/if}}</label>
+          <input id="new-price" type="number" name="price" value="{{newPrice}}" min="0.01" step="0.01" required class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="new-stock" class="form-label small fw-semibold">Stock</label>
+          <input id="new-stock" type="number" name="stock" value="{{newStock}}" min="0" max="{{stockMax}}" step="1" required class="form-control">
+        </div>
+        <div class="col-md-3">
+          <label for="new-min-order" class="form-label small fw-semibold">Minimum order</label>
+          <input id="new-min-order" type="number" name="min_order" value="{{newMinOrder}}" min="1" max="{{stockMax}}" step="1" required class="form-control">
+          <div class="form-text">Smallest quantity per order.</div>
+        </div>
+        <div class="col-md-3">
+          <label for="new-lead-days" class="form-label small fw-semibold">Lead time (days)</label>
+          <input id="new-lead-days" type="number" name="lead_days" value="{{newLeadDays}}" min="0" max="{{leadMax}}" step="1" required class="form-control">
+          <div class="form-text">Days until delivery. 0 = same day.</div>
+        </div>
+        <div class="col-12">
+          <label for="new-description" class="form-label small fw-semibold">Description <span class="text-muted">(optional)</span></label>
+          <textarea id="new-description" name="description" rows="2" maxlength="{{descMax}}" class="form-control"
+                    placeholder="Brand, grade, certification, delivery area...">{{newDescription}}</textarea>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Add product</button>
+        </div>
+      </form>
+      {{else}}
+      <p class="text-muted mb-0">You already list every item you can sell.</p>
+      {{/if}}
     </div>
+  </div>
 
-    <h2 class="h5">Your listings <span class="badge text-bg-secondary">{{totalCount}}</span></h2>
-    <input id="listing-search" type="search" name="q" value="{{q}}" maxlength="100" class="form-control mb-3"
-        placeholder="Search your listings by item, category or description..." hx-get="/listings/results"
-        hx-trigger="input changed delay:300ms, search" hx-target="#listing-results" hx-swap="outerHTML">
+  <h2 class="h5">Your products <span class="badge text-bg-dark">{{totalCount}}</span></h2>
+  <div class="search-box mb-3">
+    {{> search-icon}}
+    <input id="listing-search" type="search" name="q" value="{{q}}" maxlength="100" class="form-control"
+           placeholder="Search your products by name, category or description..."
+           hx-get="/listings/results" hx-trigger="input changed delay:300ms, search"
+           hx-target="#listing-results" hx-swap="outerHTML">
+  </div>
 
-    {{> listing-results}}
+  {{> listing-results}}
 </div>
