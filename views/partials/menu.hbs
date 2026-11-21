@@ -5,6 +5,9 @@
       {{#if user}}
       <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
       <li class="nav-item"><a class="nav-link" href="/categories">Categories</a></li>
+      {{#if isSeller}}
+      <li class="nav-item"><a class="nav-link" href="/listings">My listings</a></li>
+      {{/if}}
       {{/if}}
     </ul>
     {{#if user}}

@@ -1,0 +1,4 @@
+<option value="">{{#if itemOptions.length}}Choose an item...{{else}}Choose a category first{{/if}}</option>
+{{#each itemOptions}}
+<option value="{{item_id}}" {{#if selected}}selected{{/if}}>{{item_name}} / {{unit}} (avg. {{avg_price}})</option>
+{{/each}}
