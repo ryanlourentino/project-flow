@@ -11,21 +11,89 @@
                 <th class="text-end">{{#if isRental}}Your price per day{{else}}Your price{{/if}}</th>
                 <th class="text-end">Market avg.</th>
                 <th class="text-end">Stock</th>
+                <th class="text-end">Min. order</th>
+                <th class="text-end">Lead time</th>
             </tr>
         </thead>
         <tbody>
             {{#each listings}}
             <tr>
-                <td>{{item_name}} <small class="text-muted">/ {{unit}}</small></td>
+                <td>
+                    {{item_name}} <small class="text-muted">/ {{unit}}</small>
+                    {{#if description}}
+                    <details class="small text-muted mt-1">
+                        <summary>Description</summary>
+                        <div class="text-break" style="white-space: pre-line;">{{description}}</div>
+                    </details>
+                    {{/if}}
+                </td>
                 <td>{{category_name}}</td>
                 <td class="text-end">{{price}}</td>
                 <td class="text-end text-muted">{{avg_price}}</td>
                 <td class="text-end">{{stock}}</td>
+                <td class="text-end">{{min_order}}</td>
+                <td class="text-end">{{#if lead_days}}{{lead_days}} days{{else}}Same day{{/if}}</td>
             </tr>
             {{/each}}
         </tbody>
     </table>
     {{else}}
     <p class="text-muted">You have no listings yet.</p>
+    {{/if}}
+
+    <h2 class="h5 mt-4">Add a listing</h2>
+    {{#if categoryOptions.length}}
+    <form class="row g-3" hx-post="/listings" hx-target="#listing-list" hx-swap="outerHTML">
+        <div class="col-md-4">
+            <label for="new-category" class="form-label">1. Category</label>
+            <select id="new-category" name="category_id" required class="form-select" hx-get="/listings/item-options"
+                hx-target="#new-item" hx-swap="innerHTML">
+                <option value="">Choose a category...</option>
+                {{#each categoryOptions}}
+                <option value="{{category_id}}" {{#if selected}}selected{{/if}}>{{category_name}} ({{available}} items)
+                </option>
+                {{/each}}
+            </select>
+        </div>
+        <div class="col-md-8">
+            <label for="new-item" class="form-label">2. Item</label>
+            <select id="new-item" name="item_id" required class="form-select">
+                {{> listing-item-options}}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="new-price" class="form-label">3. {{#if isRental}}Price per day{{else}}Price{{/if}}</label>
+            <input id="new-price" type="number" name="price" value="{{newPrice}}" min="0.01" step="0.01" required
+                class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="new-stock" class="form-label">4. Stock</label>
+            <input id="new-stock" type="number" name="stock" value="{{newStock}}" min="0" max="{{stockMax}}" step="1"
+                required class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="new-min-order" class="form-label">5. Minimum order</label>
+            <input id="new-min-order" type="number" name="min_order" value="{{newMinOrder}}" min="1" max="{{stockMax}}"
+                step="1" required class="form-control">
+            <div class="form-text">Smallest quantity per order.</div>
+        </div>
+        <div class="col-md-3">
+            <label for="new-lead-days" class="form-label">6. Lead time (days)</label>
+            <input id="new-lead-days" type="number" name="lead_days" value="{{newLeadDays}}" min="0" max="{{leadMax}}"
+                step="1" required class="form-control">
+            <div class="form-text">Days until delivery. 0 = same day.</div>
+        </div>
+        <div class="col-12">
+            <label for="new-description" class="form-label">7. Description <span
+                    class="text-muted">(optional)</span></label>
+            <textarea id="new-description" name="description" rows="2" maxlength="{{descMax}}" class="form-control"
+                placeholder="Brand, grade, certification, delivery area...">{{newDescription}}</textarea>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Add listing</button>
+        </div>
+    </form>
+    {{else}}
+    <p class="text-muted">You already list every item you can sell.</p>
     {{/if}}
 </div>
