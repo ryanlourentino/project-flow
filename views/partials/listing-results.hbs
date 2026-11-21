@@ -33,10 +33,10 @@
               <form hx-put="/listings/{{listing_id}}" class="row g-2 align-items-end py-2">
                 <div class="col-12">
                   <span class="fw-medium">{{item_name}}</span>
-                  <span class="small text-muted">per {{unit}} &middot; {{category_name}} &middot; avg. {{avg_price}}</span>
+                  <span class="small text-muted">/ {{unit}} &middot; {{category_name}} &middot; avg. {{money avg_price}}</span>
                 </div>
                 <div class="col-md-3">
-                  <label for="edit-price" class="form-label small fw-semibold">{{#if @root.isRental}}Rental price{{else}}Price{{/if}}</label>
+                  <label for="edit-price" class="form-label small fw-semibold">{{#if @root.isRental}}Rental price{{else}}Price{{/if}} ({{currency}})</label>
                   <input id="edit-price" type="number" name="price" value="{{editPrice}}" min="0.01" step="0.01" required autofocus class="form-control form-control-sm">
                 </div>
                 <div class="col-md-3">
@@ -66,7 +66,6 @@
           <tr>
             <td class="ps-3">
               <div class="fw-medium">{{item_name}}</div>
-              <div class="small text-muted">per {{unit}}</div>
               {{#if description}}
               <details class="small text-muted mt-1">
                 <summary>Description</summary>
@@ -76,8 +75,8 @@
             </td>
             <td><span class="badge rounded-pill text-bg-light border fw-normal">{{category_name}}</span></td>
             <td class="text-end text-nowrap">
-              <div class="fw-semibold">{{price}}</div>
-              <div class="small text-muted">avg. {{avg_price}}</div>
+              <div><span class="fw-semibold">{{money price}}</span> <span class="small text-muted">/ {{unit}}</span></div>
+              <div class="small text-muted">avg. {{money avg_price}}</div>
             </td>
             <td class="text-end">
               {{#if stock}}{{stock}}{{else}}<span class="badge text-bg-danger">Sold out</span>{{/if}}

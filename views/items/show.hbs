@@ -1,67 +1,64 @@
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/categories">Categories</a></li>
-        <li class="breadcrumb-item"><a href="/categories/{{item.category_id}}">{{item.category_name}}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{item.item_name}}</li>
-    </ol>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/categories">Categories</a></li>
+    <li class="breadcrumb-item"><a href="/categories/{{item.category_id}}">{{item.category_name}}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{item.item_name}}</li>
+  </ol>
 </nav>
 
 <h1 class="h4 mb-1">{{item.item_name}}</h1>
 <p class="text-muted">
-    {{#if item.is_rentable}}<span class="badge text-bg-info">Rental</span>{{else}}<span
-        class="badge text-bg-secondary">Material</span>{{/if}}
-    Priced per {{item.unit}} &middot; Market average {{item.avg_price}}
+  {{#if item.is_rentable}}<span class="badge text-bg-info">Rental</span>{{else}}<span class="badge text-bg-secondary">Material</span>{{/if}}
+  Market average {{money item.avg_price}} / {{item.unit}}
 </p>
 
 <h2 class="h5">Offers <span class="badge text-bg-secondary">{{offers.length}}</span></h2>
 {{#if offers.length}}
 <p class="text-muted small mb-2">{{inStockCount}} in stock. Cheapest in-stock offer first.</p>
 <div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr class="small text-uppercase text-nowrap">
-                    <th class="ps-3">Seller</th>
-                    <th class="text-end">Price per {{item.unit}}</th>
-                    <th class="text-end">Stock</th>
-                    <th class="pe-3">Terms</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each offers}}
-                <tr{{#unless stock}} class="text-muted" {{/unless}}>
-                    <td class="ps-3">
-                        <div class="fw-medium">
-                            {{company_name}}
-                            {{#if isMine}}<span class="badge text-bg-primary">You</span>{{/if}}
-                        </div>
-                        {{#if description}}
-                        <details class="small text-muted mt-1">
-                            <summary>Description</summary>
-                            <div class="text-break" style="white-space: pre-line;">{{description}}</div>
-                        </details>
-                        {{/if}}
-                    </td>
-                    <td class="text-end text-nowrap">
-                        <div class="fw-semibold">
-                            {{#if isCheapest}}<span class="badge text-bg-success me-1">Lowest</span>{{/if}}{{price}}
-                        </div>
-                        {{#if compareText}}<div class="small {{#if isBelowAvg}}text-success{{else}}text-muted{{/if}}">
-                            {{compareText}}</div>{{/if}}
-                    </td>
-                    <td class="text-end">
-                        {{#if stock}}{{stock}}{{else}}<span class="badge text-bg-danger">Sold out</span>{{/if}}
-                    </td>
-                    <td class="pe-3 small text-nowrap">
-                        <div>Min. order {{min_order}}</div>
-                        <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day
-                            delivery{{/if}}</div>
-                    </td>
-                    </tr>
-                    {{/each}}
-            </tbody>
-        </table>
-    </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr class="small text-uppercase text-nowrap">
+          <th class="ps-3">Seller</th>
+          <th class="text-end">Price</th>
+          <th class="text-end">Stock</th>
+          <th class="pe-3">Terms</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each offers}}
+        <tr{{#unless stock}} class="text-muted"{{/unless}}>
+          <td class="ps-3">
+            <div class="fw-medium">
+              {{company_name}}
+              {{#if isMine}}<span class="badge text-bg-primary">You</span>{{/if}}
+            </div>
+            {{#if description}}
+            <details class="small text-muted mt-1">
+              <summary>Description</summary>
+              <div class="text-break" style="white-space: pre-line;">{{description}}</div>
+            </details>
+            {{/if}}
+          </td>
+          <td class="text-end text-nowrap">
+            <div class="fw-semibold">
+              {{#if isCheapest}}<span class="badge text-bg-success me-1">Lowest</span>{{/if}}{{money price}} <span class="small fw-normal text-muted">/ {{@root.item.unit}}</span>
+            </div>
+            {{#if compareText}}<div class="small {{#if isBelowAvg}}text-success{{else}}text-muted{{/if}}">{{compareText}}</div>{{/if}}
+          </td>
+          <td class="text-end">
+            {{#if stock}}{{stock}}{{else}}<span class="badge text-bg-danger">Sold out</span>{{/if}}
+          </td>
+          <td class="pe-3 small text-nowrap">
+            <div>Min. order {{min_order}}</div>
+            <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day delivery{{/if}}</div>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
 </div>
 {{else}}
 <p class="text-muted">No seller offers this item yet.</p>

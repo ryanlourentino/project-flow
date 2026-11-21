@@ -22,12 +22,11 @@
           <tr>
             <td class="ps-3">
               <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
-              <div class="small text-muted">per {{unit}}</div>
             </td>
             <td>{{#if is_rentable}}<span class="badge rounded-pill text-bg-light border fw-normal">Rental</span>{{else}}<span class="badge rounded-pill text-bg-light border fw-normal">Material</span>{{/if}}</td>
-            <td class="text-end text-muted">{{avg_price}}</td>
+            <td class="text-end text-muted text-nowrap">{{money avg_price}} <span class="small">/ {{unit}}</span></td>
             <td class="text-end">
-              {{#if offer_count}}<span class="fw-semibold">{{lowest_price}}</span>{{else}}<span class="text-muted">-</span>{{/if}}
+              {{#if offer_count}}<span class="fw-semibold text-nowrap">{{money lowest_price}}</span>{{else}}<span class="text-muted">-</span>{{/if}}
             </td>
             <td class="pe-3 text-end">
               {{#if offer_count}}<span class="badge rounded-pill text-bg-dark">{{offer_count}}</span>{{else}}<span class="small text-muted">None yet</span>{{/if}}
