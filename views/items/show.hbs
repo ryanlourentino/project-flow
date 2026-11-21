@@ -24,6 +24,7 @@
           <th class="text-end">Price</th>
           <th class="text-end">Stock</th>
           <th class="pe-3">Terms</th>
+          {{#if isBuyer}}<th class="pe-3 text-end">Order</th>{{/if}}
         </tr>
       </thead>
       <tbody>
@@ -54,6 +55,20 @@
             <div>Min. order {{min_order}}</div>
             <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day delivery{{/if}}</div>
           </td>
+          {{#if @root.isBuyer}}
+          <td class="pe-3 text-end">
+            {{#if stock}}
+            <form class="d-flex justify-content-end align-items-center gap-2"
+                  hx-post="/cart" hx-target="#add-result-{{listing_id}}" hx-swap="innerHTML">
+              <input type="hidden" name="listing_id" value="{{listing_id}}">
+              <input type="number" name="quantity" value="{{min_order}}" min="1" max="{{stock}}" step="1" required
+                     class="form-control form-control-sm" style="width: 5.5rem" aria-label="Quantity">
+              <button type="submit" class="btn btn-sm btn-primary text-nowrap">Add to cart</button>
+            </form>
+            <div id="add-result-{{listing_id}}" class="mt-1"></div>
+            {{/if}}
+          </td>
+          {{/if}}
         </tr>
         {{/each}}
       </tbody>

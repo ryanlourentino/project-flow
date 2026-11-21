@@ -21,6 +21,8 @@ async function loadUser(req, res, next) {
   res.locals.user = null;
   res.locals.isAdmin = false;
   res.locals.isSeller = false;
+  res.locals.isBuyer = false;
+  res.locals.cartCount = 0;
 
   const id = Number(req.signedCookies[SESSION_COOKIE]);
   if (!Number.isInteger(id) || id <= 0) return next();
@@ -37,6 +39,13 @@ async function loadUser(req, res, next) {
       res.locals.user = rows[0];
       res.locals.isAdmin = type === 'Admin';
       res.locals.isSeller = type === 'Supplier' || type === 'Rental';
+      res.locals.isBuyer = type === 'Contractor';
+      if (res.locals.isBuyer) {
+        // The number on the Cart badge in the menu.
+        const [[{ line_count: lineCount }]] = await db.execute(
+          'SELECT COUNT(*) AS line_count FROM CartItems WHERE buyer_id = ?', [rows[0].user_id]);
+        res.locals.cartCount = Number(lineCount);
+      }
     }
     next();
   } catch (err) {
