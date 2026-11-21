@@ -173,6 +173,7 @@ router.delete('/:id(\\d+)', adminOnly, safe(async (req, res) => {
 }));
 
 // One category and its items (the marketplace browse page). Everyone who is logged in can see it.
+// For each item: how many sellers offer it in stock, and the lowest price among them.
 router.get('/:id(\\d+)', safe(async (req, res) => {
   const id = Number(req.params.id);
   const [found] = await db.execute(
@@ -181,17 +182,23 @@ router.get('/:id(\\d+)', safe(async (req, res) => {
   );
   if (found.length === 0) return res.redirect('/categories');
 
+  // LEFT JOIN keeps items that nobody sells yet (offer_count 0, lowest_price NULL).
+  // "AND l.stock > 0" is in the ON part, so sold-out offers are left out of the count and the minimum.
   const [items] = await db.execute(
-    `SELECT item_id, item_name, unit, avg_price, is_rentable
-       FROM Items
-      WHERE category_id = ?
-      ORDER BY item_name`,
+    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable,
+            COUNT(l.listing_id) AS offer_count, MIN(l.price) AS lowest_price
+       FROM Items i
+       LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
+      WHERE i.category_id = ?
+      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable
+      ORDER BY COUNT(l.listing_id) = 0, i.item_name`,
     [id]
   );
   res.render('categories/show', {
     title: found[0].category_name,
     category: found[0],
     items,
+    offeredCount: items.filter((i) => Number(i.offer_count) > 0).length,
   });
 }));
 
