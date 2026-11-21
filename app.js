@@ -22,7 +22,7 @@ app.use(loadUser); // who is logged in? (req.user and res.locals.user)
 app.use('/', require('./routes/auth'));                 // /, /login, /logout
 app.use('/dashboard', require('./routes/dashboard'));
 // app.use('/auth', require('./routes/auth'));
-app.use('/categories', require('./routes/categories'));
+app.use('/categories', requireLogin, require('./routes/categories'));
 app.use('/listings', requireRole('Supplier', 'Rental'), require('./routes/listings'));
 // app.use('/cart', require('./routes/cart'));
 
