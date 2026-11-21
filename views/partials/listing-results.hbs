@@ -102,9 +102,12 @@
                             <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day
                                 delivery{{/if}}</div>
                         </td>
-                        <td class="pe-3 text-end">
+                        <td class="pe-3 text-end text-nowrap">
                             <button type="button" class="btn btn-sm btn-outline-secondary"
                                 hx-get="/listings/{{listing_id}}/edit">Edit</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                hx-delete="/listings/{{listing_id}}" hx-target="#listing-page"
+                                hx-confirm="Delete your listing for {{item_name}}?">Delete</button>
                         </td>
                     </tr>
                     {{/if}}

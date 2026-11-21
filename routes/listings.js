@@ -145,9 +145,9 @@ async function formData(req, opts = {}) {
   };
 }
 
-// The form and the first page of all listings (no search).
+// The form and one page of listings. Without opts.q / opts.page: all listings, page 1.
 async function pageData(req, opts = {}) {
-  return { ...(await formData(req, opts)), ...(await loadResults(req.user.user_id, '', 1)) };
+  return { ...(await formData(req, opts)), ...(await loadResults(req.user.user_id, opts.q, opts.page)) };
 }
 
 // Send only the results part: info line, table, page buttons (after search, paging, edit).
@@ -175,9 +175,15 @@ async function findOwnListing(req, id) {
   return rows[0];
 }
 
-// Send the form + list fragment (after adding a listing).
+// Send the form + list fragment (after adding or deleting a listing).
+// message / error show above the form; resultsMessage / resultsError above the table.
 async function renderPage(req, res, opts = {}) {
-  res.render('partials/listing-page', { layout: false, ...(await pageData(req, opts)) });
+  res.render('partials/listing-page', {
+    layout: false,
+    ...(await pageData(req, opts)),
+    resultsMessage: opts.resultsMessage,
+    resultsError: opts.resultsError,
+  });
 }
 
 // Price: up to 10 digits before the point and 2 after (DECIMAL(12,2)), more than 0.
@@ -320,6 +326,29 @@ router.put('/:id(\\d+)', safe(async (req, res) => {
      listing.listing_id, req.user.user_id]
   );
   await renderResults(req, res, { ...where, message: `"${listing.item_name}" was updated.` });
+}));
+
+// DELETE (only the seller's own listing)
+router.delete('/:id(\\d+)', safe(async (req, res) => {
+  const input = { ...req.query, ...req.body };      // HTMX sends DELETE values in the URL
+  const where = { q: input.q, page: input.page };   // stay on the same search and page
+  const listing = await findOwnListing(req, Number(req.params.id));
+  if (!listing) return renderPage(req, res, { ...where, resultsError: 'That listing no longer exists.' });
+
+  try {
+    await db.execute('DELETE FROM Listings WHERE listing_id = ? AND seller_id = ?',
+      [listing.listing_id, req.user.user_id]);
+  } catch (err) {
+    // Later, carts and orders will point to listings; the database then refuses the delete.
+    if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+      return renderPage(req, res, {
+        ...where,
+        resultsError: `"${listing.item_name}" is in a cart or an order, so it can't be deleted. Set its stock to 0 instead.`,
+      });
+    }
+    throw err;
+  }
+  await renderPage(req, res, { ...where, resultsMessage: `"${listing.item_name}" was deleted.` });
 }));
 
 module.exports = router;
