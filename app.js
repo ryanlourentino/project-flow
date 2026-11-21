@@ -8,7 +8,14 @@ const { loadUser, requireLogin, requireRole } = require('./middleware/auth');
 const app = express();
 
 // View engine: views/layouts/main.hbs wraps every page, views/partials/ holds reusable pieces.
-app.engine('hbs', engine({ extname: '.hbs', defaultLayout: 'main' }));
+// Money on every page: {{money price}} shows "$1,234.50". The currency is set once, here.
+const CURRENCY = 'USD';
+const moneyFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency: CURRENCY });
+const helpers = {
+  money: (value) => (value === null || value === undefined || value === '' ? '-' : moneyFormat.format(Number(value))),
+  currency: () => CURRENCY, // {{currency}} shows "USD", e.g. in form labels
+};
+app.engine('hbs', engine({ extname: '.hbs', defaultLayout: 'main', helpers }));
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
