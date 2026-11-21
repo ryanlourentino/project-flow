@@ -1,0 +1,6 @@
+{{#if error}}
+<span class="small text-danger">{{error}}</span>
+{{else}}
+<span class="small text-success">{{message}}</span> <a href="/cart" class="small">View cart</a>
+{{/if}}
+{{> cart-count oob=true}}

@@ -1,0 +1,89 @@
+<div id="cart">
+  {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+  {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+
+  {{#if lineCount}}
+  <div class="row g-4">
+    <div class="col-lg-8">
+      {{#each groups}}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">{{seller_name}}</span>
+          <span class="small text-muted">{{#if maxLeadDays}}Delivery in up to {{maxLeadDays}} days{{else}}Same-day delivery{{/if}}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle mb-0" hx-target="#cart" hx-swap="outerHTML">
+            <thead class="table-light">
+              <tr class="small text-uppercase text-nowrap">
+                <th class="ps-3">Product</th>
+                <th class="text-end">Price</th>
+                <th class="text-center">Quantity</th>
+                <th class="text-end">Total</th>
+                <th class="pe-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each items}}
+              <tr>
+                <td class="ps-3">
+                  <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
+                  <div class="small text-muted">Min. order {{min_order}} &middot; {{stock}} in stock</div>
+                  {{#if problem}}<div class="small text-danger fw-semibold">{{problem}}</div>{{/if}}
+                </td>
+                <td class="text-end text-nowrap">{{money price}} <span class="small text-muted">/ {{unit}}</span></td>
+                <td class="text-center">
+                  <input type="number" name="quantity" value="{{quantity}}" min="{{min_order}}" max="{{stock}}" step="1"
+                         class="form-control form-control-sm mx-auto" style="width: 6rem" aria-label="Quantity of {{item_name}}"
+                         hx-put="/cart/{{cart_item_id}}" hx-trigger="change">
+                </td>
+                <td class="text-end text-nowrap fw-semibold">{{money lineTotal}}</td>
+                <td class="pe-3 text-end">
+                  <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/cart/{{cart_item_id}}"
+                          aria-label="Remove {{item_name}}">Remove</button>
+                </td>
+              </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer bg-white text-end small">
+          Subtotal from {{seller_name}}: <span class="fw-semibold">{{money subtotal}}</span>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm summary-card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Order summary</h2>
+          <div class="d-flex justify-content-between small mb-1">
+            <span>Products</span><span>{{lineCount}}</span>
+          </div>
+          <div class="d-flex justify-content-between small mb-3">
+            <span>Sellers</span><span>{{groups.length}}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-baseline border-top pt-3 mb-3">
+            <span class="fw-semibold">Total</span><span class="fs-4 fw-semibold">{{money total}}</span>
+          </div>
+          {{#if hasProblems}}
+          <div class="alert alert-warning small py-2">Fix the items marked in red before ordering.</div>
+          {{/if}}
+          <button type="button" class="btn btn-primary w-100 mb-2" disabled title="Ordering comes in the next assignment">Place order (coming soon)</button>
+          <button type="button" class="btn btn-link btn-sm text-danger w-100"
+                  hx-delete="/cart" hx-target="#cart" hx-swap="outerHTML"
+                  hx-confirm="Remove everything from your cart?">Remove all</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{else}}
+  <div class="card shadow-sm">
+    <div class="card-body text-center py-5">
+      <h2 class="h5">Your cart is empty</h2>
+      <p class="text-muted">Browse the categories, open a product and add an offer to your cart.</p>
+      <a href="/categories" class="btn btn-primary">Browse categories</a>
+    </div>
+  </div>
+  {{/if}}
+</div>

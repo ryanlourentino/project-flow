@@ -31,6 +31,7 @@ app.use((req, res, next) => {
     dashboard: req.path.startsWith('/dashboard'),
     categories: req.path.startsWith('/categories') || req.path.startsWith('/items'),
     products: req.path.startsWith('/listings'),
+    cart: req.path.startsWith('/cart'),
   };
   next();
 });
@@ -42,7 +43,7 @@ app.use('/dashboard', require('./routes/dashboard'));
 app.use('/categories', requireLogin, require('./routes/categories'));
 app.use('/listings', requireRole('Supplier', 'Rental'), require('./routes/listings'));
 app.use('/items', requireLogin, require('./routes/items'));
-// app.use('/cart', require('./routes/cart'));
+app.use('/cart', requireRole('Contractor'), require('./routes/cart'));
 
 app.listen(3000, () => {
   console.log('Project Flow listening on port 3000');
