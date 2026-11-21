@@ -1,0 +1,45 @@
+<footer class="site-footer mt-5">
+  <div class="container py-5">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <a href="/" class="d-inline-flex align-items-center gap-2 mb-3 text-decoration-none">
+          {{> logo}}
+          <span class="brand-name">Project Flow</span>
+        </a>
+        <p class="small mb-0">
+          One marketplace for construction materials and equipment. Compare suppliers and rental
+          partners, order for your projects, and keep every site supplied on time.
+        </p>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h2 class="footer-heading">Marketplace</h2>
+        <ul class="list-unstyled small mb-0">
+          <li><a href="/categories">Categories</a></li>
+          {{#if isSeller}}<li><a href="/listings">My Products</a></li>{{/if}}
+          <li><a href="/dashboard">Dashboard</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h2 class="footer-heading">For</h2>
+        <ul class="list-unstyled small mb-0">
+          <li>Contractors</li>
+          <li>Material suppliers</li>
+          <li>Equipment rental partners</li>
+        </ul>
+      </div>
+      <div class="col-lg-3">
+        <h2 class="footer-heading">About</h2>
+        <p class="small mb-0">
+          Term project for Software Engineering in Construction Management,
+          National Taiwan University of Science and Technology (NTUST).
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container py-3 small d-flex flex-wrap justify-content-between gap-2">
+      <span>&copy; 2026 Project Flow</span>
+      <span>Built with Express, Handlebars, HTMX and MySQL</span>
+    </div>
+  </div>
+</footer>

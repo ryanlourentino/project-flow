@@ -1,53 +1,20 @@
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/categories">Categories</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{category.category_name}}</li>
-    </ol>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/categories">Categories</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{category.category_name}}</li>
+  </ol>
 </nav>
 
-<h1 class="h3 mb-1">{{category.category_name}}</h1>
-{{#if category.description}}<p class="text-muted mb-1">{{category.description}}</p>{{/if}}
-<p class="text-muted small">{{items.length}} items &middot; {{offeredCount}} offered by sellers. Click an item to
-    compare offers.</p>
+<div class="eyebrow">Category</div>
+<h1 class="mb-1">{{category.category_name}}</h1>
+{{#if category.description}}<p class="text-muted">{{category.description}}</p>{{/if}}
 
-{{#if items.length}}
-<div class="card shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-                <tr class="small text-uppercase text-nowrap">
-                    <th class="ps-3">Item</th>
-                    <th>Type</th>
-                    <th class="text-end">Market avg.</th>
-                    <th class="text-end">Lowest offer</th>
-                    <th class="pe-3 text-end">Sellers</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{#each items}}
-                <tr>
-                    <td class="ps-3">
-                        <a href="/items/{{item_id}}" class="fw-medium text-decoration-none">{{item_name}}</a>
-                        <div class="small text-muted">per {{unit}}</div>
-                    </td>
-                    <td>{{#if is_rentable}}<span class="badge text-bg-info">Rental</span>{{else}}<span
-                            class="badge text-bg-secondary">Material</span>{{/if}}</td>
-                    <td class="text-end text-muted">{{avg_price}}</td>
-                    <td class="text-end">
-                        {{#if offer_count}}<span class="fw-semibold">{{lowest_price}}</span>{{else}}<span
-                            class="text-muted">-</span>{{/if}}
-                    </td>
-                    <td class="pe-3 text-end">
-                        {{#if offer_count}}<span
-                            class="badge rounded-pill text-bg-success">{{offer_count}}</span>{{else}}<span
-                            class="small text-muted">None yet</span>{{/if}}
-                    </td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-    </div>
+<div class="search-box my-3">
+  {{> search-icon}}
+  <input id="item-search" type="search" name="q" value="{{q}}" maxlength="100" class="form-control"
+         placeholder="Search products in {{category.category_name}}..."
+         hx-get="/categories/{{category.category_id}}/items" hx-trigger="input changed delay:300ms, search"
+         hx-target="#category-items" hx-swap="outerHTML">
 </div>
-{{else}}
-<p class="text-muted">No items in this category yet.</p>
-{{/if}}
+
+{{> category-items}}
