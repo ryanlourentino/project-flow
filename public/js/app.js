@@ -1,6 +1,6 @@
 // Small browser-side helpers for every page (loaded in views/layouts/main.hbs, after HTMX).
 
-// Success messages (green alerts) fade out and disappear by themselves after 20 seconds.
+// Success messages (green alerts) fade out and disappear by themselves after 5 seconds.
 // htmx.onLoad runs once for the whole page when it opens, and again for every piece of HTML
 // that HTMX swaps in later (that is where new messages come from after Save, Delete, ...).
 (function () {

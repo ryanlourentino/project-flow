@@ -15,6 +15,11 @@ change is a numbered SQL file in `db/init/`, so a fresh database gets the same s
 
 | 5 | Items | Added `is_reviewed` (BOOLEAN, default TRUE); `source_material_id` and `avg_price` may now be NULL | A seller can add a product that is not in the catalog yet. It gets `is_reviewed` = FALSE (shown as "New") until the Admin has checked it, has no source material ID and no market average yet. | `12_seller_products.sql` |
 
+| 6 | MarketListings (view, not a table) | `SELECT` of the Listings whose seller is not a Rejected Supplier | When the Admin rejects a Supplier, their products disappear from every buyer page without being deleted; undoing the rejection brings them back. Buyer pages read `MarketListings`, seller and Admin pages read `Listings`. | `13_admin_review.sql` |
+
+**Notifications** (already in the MVP ERD) is now used: the app writes a message to a seller when the Admin approves or
+rejects them, removes one of their listings, or approves, renames, merges or removes a product they added.
+
 **Items.listed_by** no longer says who *sells* an item (that is in `Listings`, several sellers per item). It now records
 the seller who *added* a product in the app; it is NULL for the products that came from the source data.
 
@@ -25,8 +30,9 @@ similar rows 205, 206 and 251.
 
 **Demo data** (the source data has no sellers' offers or certificates): an Admin account (`02_admin_user.sql`), about 1,100
 demo offers from 21 Suppliers and all 27 Rental partners with made-up sample descriptions (`07_demo_listings.sql`),
-3 demo projects for the demo Contractor (`10_demo_projects.sql`), and made-up ISO certificates marked "(demo)" for about
-70% of Suppliers, who are then 'Approved' (`11_demo_certifications.sql`).
+3 demo projects for the demo Contractor (`10_demo_projects.sql`), made-up ISO certificates marked "(demo)" for about
+70% of Suppliers, who are then 'Approved' (`11_demo_certifications.sql`), and for the Admin pages 6 more certificates
+"waiting for review" plus 3 seller-added "New" products with their listings (`13_admin_review.sql`).
 
 ---
 
