@@ -6,13 +6,23 @@
   </ol>
 </nav>
 
-<h1 class="h4 mb-1">{{item.item_name}}</h1>
+<h1 class="h4 mb-1">{{item.item_name}}
+  {{#unless item.is_reviewed}}<span class="badge rounded-pill badge-new fw-normal align-middle fs-6" title="Added by a seller, not reviewed by the Admin yet">New</span>{{/unless}}
+</h1>
 <p class="text-muted">
-  {{#if item.is_rentable}}<span class="badge text-bg-info">Rental</span>{{else}}<span class="badge text-bg-secondary">Material</span>{{/if}}
-  Market average {{money item.avg_price}} / {{item.unit}}
+  {{#if item.is_rentable}}<span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{else}}<span class="badge rounded-pill text-bg-light border fw-normal">Material</span>{{/if}}
+  {{#if item.avg_price}}Market average {{money item.avg_price}} / {{item.unit}}{{else}}Unit: {{item.unit}} &middot; no market average yet{{/if}}
 </p>
 
-<h2 class="h5">Offers <span class="badge text-bg-secondary">{{offers.length}}</span></h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <h2 class="h5 mb-0">Offers <span class="badge text-bg-dark">{{offers.length}}</span></h2>
+  {{#unless item.is_rentable}}
+  <div class="btn-group btn-group-sm" role="group" aria-label="Filter sellers">
+    <a href="/items/{{item.item_id}}" class="btn {{#if verifiedOnly}}btn-outline-dark{{else}}btn-dark{{/if}}">All sellers ({{allCount}})</a>
+    <a href="/items/{{item.item_id}}?verified=1" class="btn {{#if verifiedOnly}}btn-dark{{else}}btn-outline-dark{{/if}}">Verified only ({{verifiedCount}})</a>
+  </div>
+  {{/unless}}
+</div>
 {{#if offers.length}}
 <p class="text-muted small mb-2">{{inStockCount}} in stock. Cheapest in-stock offer first.</p>
 <div class="card shadow-sm">
@@ -32,15 +42,23 @@
         <tr{{#unless stock}} class="text-muted"{{/unless}}>
           <td class="ps-3">
             <div class="fw-medium">
-              {{company_name}}
+              <a href="/sellers/{{seller_id}}">{{company_name}}</a>
+              {{#if isVerified}}<span class="badge rounded-pill badge-verified fw-normal">&#10003; Verified</span>{{/if}}
               {{#if isMine}}<span class="badge text-bg-primary">You</span>{{/if}}
             </div>
-            {{#if description}}
-            <details class="small text-muted mt-1">
-              <summary>Description</summary>
-              <div class="text-break" style="white-space: pre-line;">{{description}}</div>
+            <details class="small mt-1 offer-details">
+              <summary>Details</summary>
+              <div class="mt-2">
+                {{#if description}}<p class="text-break mb-2" style="white-space: pre-line;">{{description}}</p>{{/if}}
+                <dl class="row mb-1 text-muted">
+                  {{#if about}}<dt class="col-4 fw-normal">About</dt><dd class="col-8 mb-1">{{about}}</dd>{{/if}}
+                  {{#if location}}<dt class="col-4 fw-normal">Location</dt><dd class="col-8 mb-1">{{location}}</dd>{{/if}}
+                  {{#if iso_certification}}<dt class="col-4 fw-normal">Certificate</dt><dd class="col-8 mb-1">{{iso_certification}}</dd>{{/if}}
+                  <dt class="col-4 fw-normal">On sale</dt><dd class="col-8 mb-1">{{plural products_on_sale "product" "products"}}</dd>
+                </dl>
+                <a href="/sellers/{{seller_id}}">See all products from this seller &rarr;</a>
+              </div>
             </details>
-            {{/if}}
           </td>
           <td class="text-end text-nowrap">
             <div class="fw-semibold">
@@ -53,7 +71,7 @@
           </td>
           <td class="pe-3 small text-nowrap">
             <div>Min. order {{min_order}}</div>
-            <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day delivery{{/if}}</div>
+            <div class="text-muted">{{#if lead_days}}{{plural lead_days "day" "days"}} lead time{{else}}Same-day delivery{{/if}}</div>
           </td>
           {{#if @root.isBuyer}}
           <td class="pe-3 text-end">
@@ -76,5 +94,5 @@
   </div>
 </div>
 {{else}}
-<p class="text-muted">No seller offers this item yet.</p>
+<p class="text-muted">{{#if verifiedOnly}}No verified seller offers this item yet. <a href="/items/{{item.item_id}}">Show all sellers</a>.{{else}}No seller offers this item yet.{{/if}}</p>
 {{/if}}

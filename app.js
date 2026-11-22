@@ -14,6 +14,8 @@ const moneyFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency
 const helpers = {
   money: (value) => (value === null || value === undefined || value === '' ? '-' : moneyFormat.format(Number(value))),
   currency: () => CURRENCY, // {{currency}} shows "USD", e.g. in form labels
+  // {{plural count "day" "days"}} shows "1 day" or "3 days".
+  plural: (count, one, many) => `${count} ${Number(count) === 1 ? one : many}`,
 };
 app.engine('hbs', engine({ extname: '.hbs', defaultLayout: 'main', helpers }));
 app.set('view engine', 'hbs');
@@ -30,7 +32,7 @@ app.use((req, res, next) => {
   res.locals.nav = {
     dashboard: req.path.startsWith('/dashboard'),
     manage: req.path.startsWith('/categories/manage'),
-    categories: (req.path.startsWith('/categories') && !req.path.startsWith('/categories/manage')) || req.path.startsWith('/items'),
+    categories: (req.path.startsWith('/categories') && !req.path.startsWith('/categories/manage')) || req.path.startsWith('/items') || req.path.startsWith('/sellers'),
     products: req.path.startsWith('/listings'),
     cart: req.path.startsWith('/cart'),
     projects: req.path.startsWith('/projects'),
@@ -45,6 +47,7 @@ app.use('/dashboard', require('./routes/dashboard'));
 app.use('/categories', requireLogin, require('./routes/categories'));
 app.use('/listings', requireRole('Supplier', 'Rental'), require('./routes/listings'));
 app.use('/items', requireLogin, require('./routes/items'));
+app.use('/sellers', requireLogin, require('./routes/sellers'));
 app.use('/cart', requireRole('Contractor'), require('./routes/cart'));
 app.use('/projects', requireRole('Contractor'), require('./routes/projects'));
 

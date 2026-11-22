@@ -33,7 +33,7 @@
               <form hx-put="/listings/{{listing_id}}" class="row g-2 align-items-end py-2">
                 <div class="col-12">
                   <span class="fw-medium">{{item_name}}</span>
-                  <span class="small text-muted">/ {{unit}} &middot; {{category_name}} &middot; avg. {{money avg_price}}</span>
+                  <span class="small text-muted">/ {{unit}} &middot; {{category_name}}{{#if avg_price}} &middot; avg. {{money avg_price}}{{/if}}</span>
                 </div>
                 <div class="col-md-3">
                   <label for="edit-price" class="form-label small fw-semibold">{{#if @root.isRental}}Rental price{{else}}Price{{/if}} ({{currency}})</label>
@@ -65,7 +65,7 @@
           {{else}}
           <tr>
             <td class="ps-3">
-              <div class="fw-medium">{{item_name}}</div>
+              <div class="fw-medium">{{item_name}}{{#unless is_reviewed}} <span class="badge rounded-pill badge-new fw-normal" title="Waiting for the Admin's review">New</span>{{/unless}}</div>
               {{#if description}}
               <details class="small text-muted mt-1">
                 <summary>Description</summary>
@@ -76,14 +76,14 @@
             <td><span class="badge rounded-pill text-bg-light border fw-normal">{{category_name}}</span></td>
             <td class="text-end text-nowrap">
               <div><span class="fw-semibold">{{money price}}</span> <span class="small text-muted">/ {{unit}}</span></div>
-              <div class="small text-muted">avg. {{money avg_price}}</div>
+              {{#if avg_price}}<div class="small text-muted">avg. {{money avg_price}}</div>{{/if}}
             </td>
             <td class="text-end">
               {{#if stock}}{{stock}}{{else}}<span class="badge text-bg-danger">Sold out</span>{{/if}}
             </td>
             <td class="small text-nowrap">
               <div>Min. order {{min_order}}</div>
-              <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day delivery{{/if}}</div>
+              <div class="text-muted">{{#if lead_days}}{{plural lead_days "day" "days"}} lead time{{else}}Same-day delivery{{/if}}</div>
             </td>
             <td class="pe-3 text-end text-nowrap">
               <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/listings/{{listing_id}}/edit">Edit</button>

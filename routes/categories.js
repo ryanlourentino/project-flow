@@ -14,7 +14,7 @@ async function loadCategories() {
        FROM Categories c
        LEFT JOIN Items i ON i.category_id = c.category_id
       GROUP BY c.category_id, c.category_name, c.description
-      ORDER BY c.category_name`
+      ORDER BY c.category_name = 'Others', c.category_name`
   );
   return rows;
 }
@@ -82,7 +82,7 @@ async function loadCategoryCards(rawQuery) {
        LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
       GROUP BY c.category_id, c.category_name, c.description
      HAVING ? = '' OR c.category_name LIKE ? OR c.description LIKE ? OR match_count > 0
-      ORDER BY c.category_name`,
+      ORDER BY c.category_name = 'Others', c.category_name`,
     [q, like, q, like, like]
   );
   return {
@@ -104,12 +104,12 @@ async function loadCategoryItems(categoryId, rawQuery) {
   // LEFT JOIN keeps products that nobody sells yet (offer_count 0, lowest_price NULL).
   // "AND l.stock > 0" is in the ON part, so sold-out offers are left out of the count and the minimum.
   const [items] = await db.execute(
-    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable,
+    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable, i.is_reviewed,
             COUNT(l.listing_id) AS offer_count, MIN(l.price) AS lowest_price
        FROM Items i
        LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
       WHERE i.category_id = ? AND (? = '' OR i.item_name LIKE ?)
-      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable
+      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable, i.is_reviewed
       ORDER BY COUNT(l.listing_id) = 0, i.item_name`,
     [categoryId, q, like]
   );

@@ -1,7 +1,7 @@
 # ERD Update (v3) — Web app tables (Assignment #4)
 
 **Why:** The web app turns the catalog into a marketplace. Several sellers can now offer the same catalog item at their own
-price, and Contractors collect offers in a cart before ordering. This needed two new tables and one new column. Each
+price, and Contractors collect offers in a cart before ordering. This needed two new tables and two new columns. Each
 change is a numbered SQL file in `db/init/`, so a fresh database gets the same schema.
 
 **Entity count:** MVP 13 (was 11), Full Version 18 (was 16).
@@ -10,13 +10,23 @@ change is a numbered SQL file in `db/init/`, so a fresh database gets the same s
 |---|---|---|---|---|
 | 1 | Categories | Added `description` (VARCHAR(255), optional) | Shown on the category cards; the Admin edits it. The 10 ETL categories get a short description. | `03_categories_description.sql`, `08_category_descriptions.sql` |
 | 2 | Listings (new) | `listing_id` PK, `item_id` FK → Items, `seller_id` FK → Users, `price`, `stock`, `min_order`, `lead_days`, `description`, `created_at`; UNIQUE (`item_id`, `seller_id`) | One seller's offer for one catalog item. This is the many-to-many table between sellers and items that v2 listed under "Future improvement". `price` is DECIMAL(12,2) like `avg_price`; CHECK constraints keep price, stock and lead time ≥ 0 and the minimum order ≥ 1. | `04`, `05`, `06_listings_*.sql` |
-| 3 | CartItems (new) | `cart_item_id` PK, `buyer_id` FK → Users, `listing_id` FK → Listings (ON DELETE CASCADE), `quantity` (≥ 1), `added_at`; UNIQUE (`buyer_id`, `listing_id`) | A Contractor's cart before ordering. When a seller deletes a listing, it simply disappears from carts. | `09_cart_items.sql` |
+| 3 | Users | Added `description` (VARCHAR(255)), filled by the ETL from companies.tsv | The company's own business description, shown to buyers as the seller's "About" text. Before v3 it was only used to derive `account_type`. | `01_etl.sql` |
+| 4 | CartItems (new) | `cart_item_id` PK, `buyer_id` FK → Users, `listing_id` FK → Listings (ON DELETE CASCADE), `quantity` (≥ 1), `added_at`; UNIQUE (`buyer_id`, `listing_id`) | A Contractor's cart before ordering. When a seller deletes a listing, it simply disappears from carts. | `09_cart_items.sql` |
 
-**Items.listed_by** stays in the schema but is no longer used: who sells an item, and for how much, is now stored in
-`Listings` (several sellers per item instead of one).
+| 5 | Items | Added `is_reviewed` (BOOLEAN, default TRUE); `source_material_id` and `avg_price` may now be NULL | A seller can add a product that is not in the catalog yet. It gets `is_reviewed` = FALSE (shown as "New") until the Admin has checked it, has no source material ID and no market average yet. | `12_seller_products.sql` |
 
-**Demo data** (marked so it is not mistaken for source data): an Admin account (`02_admin_user.sql`), demo offers with the
-description "Demo listing" (`07_demo_listings.sql`), and 3 demo projects for the demo Contractor (`10_demo_projects.sql`).
+**Items.listed_by** no longer says who *sells* an item (that is in `Listings`, several sellers per item). It now records
+the seller who *added* a product in the app; it is NULL for the products that came from the source data.
+
+**Item names** (ETL step 2.6): a part in brackets is attached to the part before it ("Fine aggregate (Coarse sand, for
+mixing)" instead of "Fine aggregate - (Coarse sand, for mixing)"), names that are only a bracket lose the brackets, and
+material 67827638, whose source name is only "(Used as a crusher)", is renamed "Crawler type (used as a crusher)" like the
+similar rows 205, 206 and 251.
+
+**Demo data** (the source data has no sellers' offers or certificates): an Admin account (`02_admin_user.sql`), about 1,100
+demo offers from 21 Suppliers and all 27 Rental partners with made-up sample descriptions (`07_demo_listings.sql`),
+3 demo projects for the demo Contractor (`10_demo_projects.sql`), and made-up ISO certificates marked "(demo)" for about
+70% of Suppliers, who are then 'Approved' (`11_demo_certifications.sql`).
 
 ---
 
@@ -72,7 +82,7 @@ companies.tsv has no account-type column, so `Users.account_type` is derived fro
 |---|---|---|
 | materials | `PriceStdev` | Market statistic; no MVP feature uses it |
 | materials | `NoSamples` | Price-survey metadata, not a property of the item |
-| companies | `description` | Used only during Transform to derive `account_type`; not stored |
+| companies | `description` | Used during Transform to derive `account_type`; since v3 also stored as `Users.description` |
 | companies | `comments` | Marketing free text; no MVP feature uses it |
 | transactions | `total_price` | 2,535 values are wrong (quantity not applied); `total_value` is recomputed as quantity × unit_price × (1 − discount_rate/100) |
 | transactions | `notes` | Redundant: its percentage always equals `discount_rate` |

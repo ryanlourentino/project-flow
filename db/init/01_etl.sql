@@ -1018,6 +1018,25 @@ UPDATE temp_materials
 SET item_clean = TRIM(REGEXP_REPLACE(item_clean, ' {2,}', ' '))
 WHERE item_group IN ('Material', 'Machine');
 
+-- Purpose: e) a part in brackets belongs to the part before it, so step c) should not
+-- have made it a separate part: "Fine aggregate - (Coarse sand)" -> "Fine aggregate (Coarse sand)".
+UPDATE temp_materials
+SET item_clean = REGEXP_REPLACE(item_clean, ' - (\\([^)]*\\))', ' $1')
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: f) a name that is only a bracket loses the brackets:
+-- "(Non-removable formwork, wood)" -> "Non-removable formwork, wood".
+UPDATE temp_materials
+SET item_clean = REGEXP_REPLACE(item_clean, '^\\((.*)\\)$', '$1')
+WHERE item_group IN ('Material', 'Machine');
+
+-- Purpose: g) manual fix. The source row for material 67827638 is only "(Used as a crusher)":
+-- the machine name is missing. Rows 205, 206 and 251 ("Crawler type ... (used as a crusher)",
+-- priced per Hour or Day like this one) show it is a crawler machine used as a crusher.
+UPDATE temp_materials
+SET item_clean = 'Crawler type (used as a crusher)'
+WHERE material_id = '67827638';
+
 UPDATE temp_materials
 SET item_clean = CONCAT(UPPER(LEFT(item_clean, 1)), SUBSTRING(item_clean, 2))
 WHERE item_group IN ('Material', 'Machine');
@@ -1031,10 +1050,11 @@ ORDER BY row_no
 LIMIT 40;
 
 -- Purpose: nothing empty, nothing still starting with Product, nothing too
--- long for Items.item_name (255). Expected: 0 / 0 / 0.
+-- long for Items.item_name (255), no " - (" left. Expected: 0 / 0 / 0 / 0.
 SELECT SUM(item_clean IS NULL OR item_clean = '')   AS empty_names,
        SUM(item_clean REGEXP '^Products?[.:]')      AS still_prefixed,
-       SUM(CHAR_LENGTH(item_clean) > 255)           AS too_long
+       SUM(CHAR_LENGTH(item_clean) > 255)           AS too_long,
+       SUM(item_clean LIKE '% - (%')                AS bracket_parts
 FROM temp_materials
 WHERE item_group IN ('Material', 'Machine');
 
@@ -1067,6 +1087,8 @@ HAVING COUNT(*) > 1;
  
 -- Purpose: central account table. email is not UNIQUE (generic emails are
 -- shared, see 2.2). password stores a SHA-256 hash (64 characters).
+-- description is the company's own business description (max 70 characters in the
+-- data); the app shows it as the seller's "About" text.
 CREATE TABLE Users (
     user_id           INT AUTO_INCREMENT PRIMARY KEY,
     source_company_id CHAR(8)      NOT NULL UNIQUE,
@@ -1076,6 +1098,7 @@ CREATE TABLE Users (
     password          CHAR(64)     NOT NULL,
     phone             VARCHAR(30),
     address           VARCHAR(255),
+    description       VARCHAR(255),
     account_type      ENUM('Contractor', 'Supplier', 'Rental', 'Admin') NOT NULL
 );
  
@@ -1213,12 +1236,13 @@ LIMIT 5;
 --   username    = company name in lowercase with "_" + source ID (always unique,
 --                 because 67 names are shared)
 --   password    = placeholder SHA-256 hash (no real logins in the source data)
+--   description = kept as the company's "About" text
 --   account_type: "Construction equipment rental" -> Rental;
 --                 "Supplier of", "Provider of", "... materials" -> Supplier;
 --                 everything else (incl. temporary traffic and fencing,
 --                 structural steel fabrication and erection) -> Contractor.
 -- Result: 500 rows.
-INSERT INTO Users (source_company_id, username, company_name, email, password, phone, address, account_type)
+INSERT INTO Users (source_company_id, username, company_name, email, password, phone, address, description, account_type)
 SELECT company_id,
        CONCAT(LOWER(TRIM(BOTH '_' FROM REGEXP_REPLACE(name, '[^A-Za-z0-9]+', '_'))), '_', company_id),
        name,
@@ -1226,6 +1250,7 @@ SELECT company_id,
        SHA2(CONCAT('changeme-', company_id), 256),
        phone,
        address,
+       description,
        CASE
          WHEN description LIKE 'Construction equipment rental%' THEN 'Rental'
          WHEN description LIKE 'Supplier of%'

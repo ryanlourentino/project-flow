@@ -1,0 +1,13 @@
+<div class="row g-3">
+  <div class="col-md-8">
+    <label for="new-product-name" class="form-label small fw-semibold">New product name</label>
+    <input id="new-product-name" type="text" name="new_name" value="{{newProductName}}" maxlength="{{productNameMax}}" required
+           class="form-control" placeholder="e.g. Portland Cement - Type 1 - 50 kg bag">
+  </div>
+  <div class="col-md-4">
+    <label for="new-product-unit" class="form-label small fw-semibold">Unit</label>
+    <input id="new-product-unit" type="text" name="new_unit" value="{{newProductUnit}}" maxlength="{{unitMax}}" required
+           class="form-control" placeholder="e.g. Bag, kg, m², Hour">
+  </div>
+  <div class="col-12 form-text mt-1">The product is added to the catalog right away, marked "New" until the Admin has reviewed it.</div>
+</div>
