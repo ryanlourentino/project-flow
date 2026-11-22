@@ -47,6 +47,7 @@ erDiagram
     Categories {
         int category_id PK "MVP - Category ID"
         string category_name "MVP - Category Name"
+        string description "MVP - Short Description"
     }
 
     Items {
@@ -58,6 +59,29 @@ erDiagram
         string unit "MVP - Unit (kg/Piece/Hour/Day/...)"
         float avg_price "MVP - Average Market Price"
         boolean is_rentable "MVP - For Rent (true) or For Sale (false)"
+    }
+
+    %% ==========================================
+    %% Marketplace (web app, Assignment #4)
+    %% ==========================================
+    Listings {
+        int listing_id PK "MVP - Listing ID"
+        int item_id FK "MVP - Catalog Item Offered"
+        int seller_id FK "MVP - Supplier/Rental Partner (Users)"
+        float price "MVP - Seller's Price per Unit"
+        int stock "MVP - Units in Stock"
+        int min_order "MVP - Minimum Order Quantity"
+        int lead_days "MVP - Days Until Delivery"
+        string description "MVP - Seller's Description"
+        date created_at "MVP - Listed On"
+    }
+
+    CartItems {
+        int cart_item_id PK "MVP - Cart Line ID"
+        int buyer_id FK "MVP - Contractor (Users)"
+        int listing_id FK "MVP - Offer in the Cart"
+        int quantity "MVP - Quantity to Order"
+        date added_at "MVP - Added On"
     }
 
     %% ==========================================
@@ -158,6 +182,10 @@ erDiagram
 
     Categories ||--o{ Items : "categorizes (MVP)"
     Users ||--o{ Items : "lists inventory (MVP)"
+    Items ||--o{ Listings : "offered as (MVP)"
+    Users ||--o{ Listings : "sells (MVP)"
+    Users ||--o{ CartItems : "keeps in cart (MVP)"
+    Listings ||--o{ CartItems : "added to cart (MVP)"
 
     PurchaseOrders ||--o{ OrderItems : "contains (MVP)"
     

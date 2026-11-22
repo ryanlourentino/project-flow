@@ -113,3 +113,7 @@ h2.h5            { font-size: 1.6rem; }
 /* ---------- Same position on every page ---------- */
 /* Always keep room for the scrollbar, so short and long pages line up exactly. */
 html { scrollbar-gutter: stable; }
+
+/* ---------- Success messages fade out (public/js/app.js removes them after 20 s) ---------- */
+.alert-success { transition: opacity 0.6s ease; }
+.alert-success.alert-fading { opacity: 0; }
