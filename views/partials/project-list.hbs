@@ -1,0 +1,101 @@
+<div id="project-list">
+  {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+  {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+
+  <div class="card border-primary-subtle shadow-sm mb-4">
+    <div class="card-header bg-primary-subtle text-primary-emphasis fw-semibold">Add a project</div>
+    <div class="card-body bg-body-tertiary">
+      <form class="row g-3 align-items-end" hx-post="/projects" hx-target="#project-list" hx-swap="outerHTML">
+        <div class="col-md-4">
+          <label for="new-name" class="form-label small fw-semibold">Project name</label>
+          <input id="new-name" type="text" name="name" value="{{newName}}" maxlength="{{nameMax}}" required
+                 class="form-control" placeholder="e.g. Riverside Apartments, Block A">
+        </div>
+        <div class="col-md-4">
+          <label for="new-address" class="form-label small fw-semibold">Site address <span class="text-muted">(optional)</span></label>
+          <input id="new-address" type="text" name="address" value="{{newAddress}}" maxlength="{{addressMax}}"
+                 class="form-control" placeholder="Street, city">
+        </div>
+        <div class="col-md-2">
+          <label for="new-phase" class="form-label small fw-semibold">Phase</label>
+          <select id="new-phase" name="phase" required class="form-select">
+            {{#each newPhases}}<option value="{{name}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Add project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <h2 class="h5">Your projects <span class="badge text-bg-dark">{{projects.length}}</span></h2>
+  {{#if projects.length}}
+  <p class="text-muted small mb-2">{{activeCount}} active &middot; {{projects.length}} in total</p>
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" hx-target="#project-list" hx-swap="outerHTML">
+        <thead class="table-light">
+          <tr class="small text-uppercase text-nowrap">
+            <th class="ps-3">Project</th>
+            <th>Site address</th>
+            <th>Phase</th>
+            <th class="pe-3 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each projects}}
+          {{#if editing}}
+          <tr class="table-primary">
+            <td colspan="4" class="px-3">
+              <form hx-put="/projects/{{proj_id}}" class="row g-2 align-items-end py-2">
+                <div class="col-md-4">
+                  <label for="edit-name" class="form-label small fw-semibold">Project name</label>
+                  <input id="edit-name" type="text" name="name" value="{{editName}}" maxlength="{{@root.nameMax}}" required autofocus
+                         class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-address" class="form-label small fw-semibold">Site address</label>
+                  <input id="edit-address" type="text" name="address" value="{{editAddress}}" maxlength="{{@root.addressMax}}"
+                         class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                  <label for="edit-phase" class="form-label small fw-semibold">Phase</label>
+                  <select id="edit-phase" name="phase" required class="form-select form-select-sm">
+                    {{#each editPhases}}<option value="{{name}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}
+                  </select>
+                </div>
+                <div class="col-md-2 text-nowrap">
+                  <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/projects/list">Cancel</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {{else}}
+          <tr{{#if isCompleted}} class="text-muted"{{/if}}>
+            <td class="ps-3 fw-medium">{{proj_name}}</td>
+            <td>{{#if proj_address}}{{proj_address}}{{else}}<span class="text-muted">-</span>{{/if}}</td>
+            <td>
+              {{#if isCompleted}}
+              <span class="badge rounded-pill text-bg-light border fw-normal">{{proj_phase}}</span>
+              {{else}}
+              <span class="badge rounded-pill text-bg-dark fw-normal">{{proj_phase}}</span>
+              {{/if}}
+            </td>
+            <td class="pe-3 text-end text-nowrap">
+              <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/projects/{{proj_id}}/edit">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/projects/{{proj_id}}"
+                      hx-confirm="Delete project {{proj_name}}?">Delete</button>
+            </td>
+          </tr>
+          {{/if}}
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{else}}
+  <p class="text-muted">You have no projects yet. Add your first one above.</p>
+  {{/if}}
+</div>
