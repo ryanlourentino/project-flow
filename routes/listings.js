@@ -2,47 +2,36 @@
 // app.js only lets Suppliers and Rentals in, so req.user is always a seller here.
 const express = require('express');
 const db = require('../db');
+const { pageNumber, buildPager } = require('../lib/pager');
 
 const router = express.Router();
 const STOCK_MAX = 1000000; // largest stock or minimum order
 const LEAD_MAX = 365;      // longest lead time in days
 const DESC_MAX = 500;      // Listings.description is VARCHAR(500)
 const PAGE_SIZE = 10;      // listings per page
-const PAGE_WINDOW = 3;     // page-number buttons shown at once (e.g. 1 2 3)
 const PRODUCT_NAME_MAX = 255; // Items.item_name is VARCHAR(255)
 const UNIT_MAX = 20;          // Items.unit is VARCHAR(20)
 const LIMITS = {               // for the inputs' max/maxlength
   stockMax: STOCK_MAX, leadMax: LEAD_MAX, descMax: DESC_MAX, productNameMax: PRODUCT_NAME_MAX, unitMax: UNIT_MAX,
 };
 
-// Runs before every route in this file: tells the views whether prices are per day.
-router.use((req, res, next) => {
-  res.locals.isRental = req.user.account_type === 'Rental';
-  next();
+// Runs before every route in this file: tells the views whether prices are per day,
+// and whether the Admin rejected this Supplier (then the seller can only look and delete).
+router.use(async (req, res, next) => {
+  try {
+    res.locals.isRental = req.user.account_type === 'Rental';
+    const [rows] = await db.execute('SELECT verification_status, review_note FROM Suppliers WHERE user_id = ?', [req.user.user_id]);
+    res.locals.isRejected = rows.length > 0 && rows[0].verification_status === 'Rejected';
+    res.locals.rejectReason = res.locals.isRejected ? rows[0].review_note : null; // the Admin's reason
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
+const REJECTED_MESSAGE = 'Your account was rejected by the Admin, so you cannot add or change products. Please contact Project Flow.';
 
 // Suppliers list materials (is_rentable = 0), Rental partners list equipment (is_rentable = 1).
 const rentableFor = (user) => (user.account_type === 'Rental' ? 1 : 0);
-
-// The page-number buttons: at most PAGE_WINDOW numbers around the current page,
-// plus first / previous / next / last. Returns null when everything fits on one page.
-function buildPager(page, totalPages) {
-  if (totalPages <= 1) return null;
-  let start = Math.max(1, page - Math.floor(PAGE_WINDOW / 2));
-  const end = Math.min(totalPages, start + PAGE_WINDOW - 1);
-  start = Math.max(1, end - PAGE_WINDOW + 1); // near the last page, keep the window full
-  const numbers = [];
-  for (let n = start; n <= end; n++) numbers.push({ number: n, current: n === page });
-  return {
-    numbers,
-    first: 1,
-    prev: page - 1,
-    next: page + 1,
-    last: totalPages,
-    atStart: page === 1,
-    atEnd: page === totalPages,
-  };
-}
 
 // READ: one page of the seller's listings, optionally filtered by a search text.
 // edit = { id, values }: show that listing as an edit form (values = what the seller typed, after an error).
@@ -63,7 +52,7 @@ async function loadResults(sellerId, rawQuery, rawPage, edit = {}) {
   const [[{ matches }]] = await db.execute(`SELECT COUNT(*) AS matches ${from}`, params);
 
   const totalPages = Math.max(1, Math.ceil(Number(matches) / PAGE_SIZE));
-  const page = Math.min(Math.max(1, Number.parseInt(rawPage, 10) || 1), totalPages);
+  const page = pageNumber(rawPage, totalPages);
   const offset = (page - 1) * PAGE_SIZE;
 
   // PAGE_SIZE and offset are numbers computed here (never text from the user),
@@ -286,6 +275,7 @@ router.get('/new-product-fields', safe(async (req, res) => {
 
 // CREATE: a listing for a catalog product, or (item_id = 'new') a new product plus its listing.
 router.post('/', safe(async (req, res) => {
+  if (res.locals.isRejected) return renderPage(req, res, { error: REJECTED_MESSAGE });
   // If something is wrong, the form keeps what the seller typed.
   const keep = {
     newCategoryId: req.body.category_id,
@@ -376,6 +366,7 @@ router.post('/', safe(async (req, res) => {
 router.get('/:id(\\d+)/edit', safe(async (req, res) => {
   if (!req.get('HX-Request')) return res.redirect('/listings'); // typed in the address bar
   const where = { q: req.query.q, page: req.query.page };
+  if (res.locals.isRejected) return renderResults(req, res, { ...where, error: REJECTED_MESSAGE });
   const listing = await findOwnListing(req, Number(req.params.id));
   if (!listing) return renderResults(req, res, { ...where, error: 'That listing no longer exists.' });
   await renderResults(req, res, { ...where, edit: { id: listing.listing_id } });
@@ -384,6 +375,7 @@ router.get('/:id(\\d+)/edit', safe(async (req, res) => {
 // UPDATE (only the seller's own listing; the item itself cannot change)
 router.put('/:id(\\d+)', safe(async (req, res) => {
   const where = { q: req.body.q, page: req.body.page };
+  if (res.locals.isRejected) return renderResults(req, res, { ...where, error: REJECTED_MESSAGE });
   const listing = await findOwnListing(req, Number(req.params.id));
   if (!listing) return renderResults(req, res, { ...where, error: 'That listing no longer exists.' });
 

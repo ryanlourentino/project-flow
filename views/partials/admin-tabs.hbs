@@ -1,0 +1,14 @@
+{{!-- The tabs inside Manage. The numbers show what is waiting for the Admin.
+      oob=true: sent again after an Approve / Reject, so the numbers stay correct (out-of-band swap). --}}
+<ul id="admin-tabs" class="nav nav-underline admin-tabs mb-4" {{#if oob}}hx-swap-oob="true"{{/if}}>
+  <li class="nav-item"><a class="nav-link{{#if @root.adminTab.categories}} active{{/if}}" href="/categories/manage">Categories</a></li>
+  <li class="nav-item">
+    <a class="nav-link{{#if @root.adminTab.suppliers}} active{{/if}}" href="/admin/suppliers">Suppliers
+      {{#if @root.adminCounts.waitingSuppliers}}<span class="badge rounded-pill text-bg-dark ms-1" title="Certificates waiting for review">{{@root.adminCounts.waitingSuppliers}}</span>{{/if}}</a>
+  </li>
+  <li class="nav-item"><a class="nav-link{{#if @root.adminTab.listings}} active{{/if}}" href="/admin/listings">All listings</a></li>
+  <li class="nav-item">
+    <a class="nav-link{{#if @root.adminTab.products}} active{{/if}}" href="/admin/products">New products
+      {{#if @root.adminCounts.newProducts}}<span class="badge rounded-pill text-bg-dark ms-1" title="Added by sellers, not reviewed yet">{{@root.adminCounts.newProducts}}</span>{{/if}}</a>
+  </li>
+</ul>

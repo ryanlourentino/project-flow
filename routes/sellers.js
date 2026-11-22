@@ -23,7 +23,7 @@ router.get('/:id(\\d+)', async (req, res, next) => {
     const [offers] = await db.execute(
       `SELECT l.listing_id, l.price, l.stock, l.min_order, l.lead_days,
               i.item_id, i.item_name, i.unit, i.is_rentable, c.category_name
-         FROM Listings l
+         FROM MarketListings l -- a rejected seller shows no products
          JOIN Items i      ON i.item_id = l.item_id
          JOIN Categories c ON c.category_id = i.category_id
         WHERE l.seller_id = ?
@@ -38,6 +38,7 @@ router.get('/:id(\\d+)', async (req, res, next) => {
       seller: {
         ...seller,
         isVerified: isVerified(seller),
+        isRejected: seller.verification_status === 'Rejected',
         isRental: seller.account_type === 'Rental',
         location: locationOf(seller.address),
       },

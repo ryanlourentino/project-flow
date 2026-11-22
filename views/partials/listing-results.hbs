@@ -86,7 +86,7 @@
               <div class="text-muted">{{#if lead_days}}{{plural lead_days "day" "days"}} lead time{{else}}Same-day delivery{{/if}}</div>
             </td>
             <td class="pe-3 text-end text-nowrap">
-              <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/listings/{{listing_id}}/edit">Edit</button>
+              {{#unless @root.isRejected}}<button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/listings/{{listing_id}}/edit">Edit</button>{{/unless}}
               <button type="button" class="btn btn-sm btn-outline-danger"
                       hx-delete="/listings/{{listing_id}}" hx-target="#listing-page"
                       hx-confirm="Delete your listing for {{item_name}}?">Delete</button>

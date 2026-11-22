@@ -28,7 +28,9 @@ erDiagram
     Suppliers {
         int supplier_id PK "MVP - Supplier ID"
         int user_id FK "Links to Users"
-        string iso_certification "MVP - Verification Status"
+        string iso_certification "MVP - ISO Certificate Info"
+        string verification_status "MVP - Pending/Approved/Rejected"
+        string review_note "MVP - Admin's Reason (e.g. why Rejected)"
     }
 
     EquipmentRentals {

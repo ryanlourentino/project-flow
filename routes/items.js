@@ -34,8 +34,8 @@ router.get('/:id(\\d+)', async (req, res, next) => {
       `SELECT l.listing_id, l.seller_id, l.price, l.stock, l.min_order, l.lead_days, l.description,
               u.company_name, u.description AS about, u.address,
               s.iso_certification, s.verification_status,
-              (SELECT COUNT(*) FROM Listings x WHERE x.seller_id = l.seller_id AND x.stock > 0) AS products_on_sale
-         FROM Listings l
+              (SELECT COUNT(*) FROM MarketListings x WHERE x.seller_id = l.seller_id AND x.stock > 0) AS products_on_sale
+         FROM MarketListings l -- the listings buyers may see (no rejected sellers)
          JOIN Users u          ON u.user_id = l.seller_id
          LEFT JOIN Suppliers s ON s.user_id = l.seller_id
         WHERE l.item_id = ?

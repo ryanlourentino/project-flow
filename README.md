@@ -47,6 +47,9 @@ Every page that changes data uses HTMX: the server sends back only the changed p
 | Listings (My Products) | Supplier, Rental | `/listings` | Pick category and product (or add a new product, marked "New" until the Admin reviews it), set price, stock, minimum order, lead time | Own listings with search and pages | Price, stock, terms, description | With confirm |
 | Cart | Contractor | `/cart` | "Add to cart" on a product's offers page | Grouped by seller, with totals | Quantity (checked against stock and minimum order) | One line or all |
 | Projects | Contractor | `/projects` | Name, site address, phase | In construction order | Name, address, phase | Not while documents belong to it |
+| Admin: Suppliers | Admin | `/admin/suppliers` | - | Filter (waiting for review, approved, not reviewed, rejected), search, pages | Approve a legit company (certificate optional), Reject with a reason (hides the supplier's products from buyers), Undo | - |
+| Admin: All listings | Admin | `/admin/listings` | - | Every listing, newest first, search, pages; odd prices marked | - | Remove a listing that breaks the rules (the seller is notified) |
+| Admin: New products | Admin | `/admin/products` | (sellers add them in My Products) | Products waiting for review | Approve, edit name / unit / category, merge a duplicate into an existing product | Remove the product and its listings |
 
 Buyers compare offers on `/categories/<id>` (lowest price per product) and `/items/<id>` (every seller, cheapest first).
 Every change is checked on the server: required fields, number ranges, and that users only change their own data.
@@ -58,7 +61,7 @@ the ETL sets each password to `changeme-<company id>`, stored as a SHA-256 hash.
 
 | Account type | What it can do | Username | Password |
 |---|---|---|---|
-| Admin | Manage categories (add, edit, delete); browse | `admin` | `admin1234` |
+| Admin | Manage: categories, supplier verification, all listings, review of new products | `admin` | `admin1234` |
 | Supplier | My Products: list materials with own price and stock; browse and compare offers | `superior_foundations_99_28001683` | `changeme-28001683` |
 | Rental | My Products: list rentable equipment; browse and compare offers | `atlas_foundations_51794209` | `changeme-51794209` |
 | Contractor | Compare offers, Cart, Projects | `central_hardware_03028108` | `changeme-03028108` |

@@ -17,6 +17,7 @@ async function countCart(buyerId) {
 
 // What is wrong with a cart line right now (the seller may have changed stock or terms since).
 function problemFor(row) {
+  if (row.verification_status === 'Rejected') return 'This seller is not available right now. Remove it from your cart.';
   if (row.stock === 0) return 'Sold out. Remove it or wait for new stock.';
   if (row.quantity > row.stock) return `Only ${row.stock} in stock.`;
   if (row.quantity < row.min_order) return `Minimum order is ${row.min_order}.`;
@@ -29,11 +30,12 @@ async function loadCart(buyerId) {
     `SELECT ci.cart_item_id, ci.quantity,
             l.listing_id, l.price, l.stock, l.min_order, l.lead_days,
             i.item_id, i.item_name, i.unit,
-            u.user_id AS seller_id, u.company_name AS seller_name
+            u.user_id AS seller_id, u.company_name AS seller_name, s.verification_status
        FROM CartItems ci
        JOIN Listings l ON l.listing_id = ci.listing_id
        JOIN Items i    ON i.item_id = l.item_id
        JOIN Users u    ON u.user_id = l.seller_id
+       LEFT JOIN Suppliers s ON s.user_id = l.seller_id -- a rejected seller's line gets a problem
       WHERE ci.buyer_id = ?
       ORDER BY u.company_name, i.item_name`,
     [buyerId]
@@ -109,7 +111,7 @@ router.post('/', safe(async (req, res) => {
   if (!Number.isInteger(listingId) || listingId <= 0) return reply({ error: 'This offer no longer exists.' });
   const [found] = await db.execute(
     `SELECT l.listing_id, l.stock, l.min_order, ci.quantity AS in_cart
-       FROM Listings l
+       FROM MarketListings l -- an offer of a rejected seller can't be added
        LEFT JOIN CartItems ci ON ci.listing_id = l.listing_id AND ci.buyer_id = ?
       WHERE l.listing_id = ?`,
     [req.user.user_id, listingId]

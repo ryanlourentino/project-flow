@@ -1,0 +1,17 @@
+<div class="eyebrow">Admin</div>
+<h1 class="mb-3">Manage</h1>
+{{> admin-tabs}}
+
+<p class="text-muted">
+  Every seller's listings, newest first. Remove a listing that breaks the marketplace rules; the seller is notified.
+  Prices and stock stay the seller's job.
+</p>
+
+<div class="search-box mb-3">
+  {{> search-icon}}
+  <input id="admin-listing-search" type="search" name="q" maxlength="100" class="form-control" placeholder="Search by product, seller, category or description..."
+         hx-get="/admin/listings/results" hx-trigger="input changed delay:300ms, search"
+         hx-target="#admin-listing-results" hx-swap="outerHTML">
+</div>
+
+{{> admin-listing-results}}
