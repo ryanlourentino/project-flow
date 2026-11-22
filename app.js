@@ -29,7 +29,8 @@ app.use(loadUser); // who is logged in? (req.user and res.locals.user)
 app.use((req, res, next) => {
   res.locals.nav = {
     dashboard: req.path.startsWith('/dashboard'),
-    categories: req.path.startsWith('/categories') || req.path.startsWith('/items'),
+    manage: req.path.startsWith('/categories/manage'),
+    categories: (req.path.startsWith('/categories') && !req.path.startsWith('/categories/manage')) || req.path.startsWith('/items'),
     products: req.path.startsWith('/listings'),
     cart: req.path.startsWith('/cart'),
   };
