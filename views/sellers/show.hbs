@@ -21,7 +21,7 @@
           <dt class="col-sm-4 fw-semibold small text-uppercase text-muted">Location</dt>
           <dd class="col-sm-8">{{#if seller.location}}{{seller.location}}{{else}}-{{/if}}</dd>
           <dt class="col-sm-4 fw-semibold small text-uppercase text-muted">Certificate</dt>
-          <dd class="col-sm-8">{{#if seller.iso_certification}}{{seller.iso_certification}}{{else}}<span class="text-muted">{{#if seller.isRental}}Not applicable{{else}}No certificate yet (verification {{seller.verification_status}}){{/if}}</span>{{/if}}</dd>
+          <dd class="col-sm-8">{{#if seller.iso_certification}}{{seller.iso_certification}}{{else}}<span class="text-muted">{{#if seller.isRental}}Not applicable{{else}}{{#if seller.isVerified}}No ISO certificate (company verified by Project Flow){{else}}No certificate yet{{/if}}{{/if}}</span>{{/if}}</dd>
           <dt class="col-sm-4 fw-semibold small text-uppercase text-muted">Contact</dt>
           <dd class="col-sm-8 mb-0 text-muted">Email and phone are shared with the buyer after an order is placed.</dd>
         </dl>

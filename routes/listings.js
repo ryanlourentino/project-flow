@@ -20,8 +20,9 @@ const LIMITS = {               // for the inputs' max/maxlength
 router.use(async (req, res, next) => {
   try {
     res.locals.isRental = req.user.account_type === 'Rental';
-    const [rows] = await db.execute('SELECT verification_status FROM Suppliers WHERE user_id = ?', [req.user.user_id]);
+    const [rows] = await db.execute('SELECT verification_status, review_note FROM Suppliers WHERE user_id = ?', [req.user.user_id]);
     res.locals.isRejected = rows.length > 0 && rows[0].verification_status === 'Rejected';
+    res.locals.rejectReason = res.locals.isRejected ? rows[0].review_note : null; // the Admin's reason
     next();
   } catch (err) {
     next(err);

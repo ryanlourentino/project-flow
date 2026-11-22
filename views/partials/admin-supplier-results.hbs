@@ -31,6 +31,25 @@
         </thead>
         <tbody>
           {{#each suppliers}}
+          {{#if rejecting}}
+          <tr class="table-primary">
+            <td colspan="5" class="px-3">
+              <form hx-put="/admin/suppliers/{{user_id}}" class="row g-2 align-items-end py-2">
+                <input type="hidden" name="status" value="Rejected">
+                <div class="col-md-9">
+                  <label for="reject-note" class="form-label small fw-semibold">Why is <strong>{{company_name}}</strong> rejected?</label>
+                  <input id="reject-note" type="text" name="review_note" maxlength="{{@root.noteMax}}" required autofocus
+                         class="form-control form-control-sm" placeholder="e.g. Fake certificate number, company address does not exist...">
+                  <div class="form-text">The supplier sees this reason. Their {{plural product_count "product" "products"}} will be hidden from buyers.</div>
+                </div>
+                <div class="col-md-3 text-end">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/admin/suppliers/results">Cancel</button>
+                  <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {{else}}
           <tr>
             <td class="ps-3">
               <a href="/sellers/{{user_id}}" class="fw-medium">{{company_name}}</a>
@@ -38,25 +57,27 @@
             </td>
             <td class="small">{{#if iso_certification}}{{iso_certification}}{{else}}<span class="text-muted">-</span>{{/if}}</td>
             <td class="text-end">{{product_count}}</td>
-            <td class="text-nowrap">
+            <td>
               {{#if isApproved}}<span class="badge rounded-pill badge-verified fw-normal">&#10003; Approved</span>{{/if}}
-              {{#if isRejected}}<span class="badge rounded-pill badge-rejected fw-normal">Rejected</span>{{/if}}
-              {{#if isWaiting}}<span class="badge rounded-pill badge-waiting fw-normal">Waiting for review</span>{{/if}}
-              {{#unless iso_certification}}{{#unless isRejected}}<span class="small text-muted">No certificate</span>{{/unless}}{{/unless}}
+              {{#if isRejected}}<span class="badge rounded-pill badge-rejected fw-normal">Rejected</span>
+                {{#if review_note}}<div class="small text-muted mt-1" style="max-width: 16rem;">{{review_note}}</div>{{/if}}{{/if}}
+              {{#if isWaiting}}<span class="badge rounded-pill badge-waiting fw-normal text-nowrap">Waiting for review</span>{{/if}}
+              {{#unless iso_certification}}{{#unless isApproved}}{{#unless isRejected}}<span class="small text-muted text-nowrap">Not reviewed</span>{{/unless}}{{/unless}}{{/unless}}
             </td>
             <td class="pe-3 text-end text-nowrap">
               {{#if canApprove}}
-              <button type="button" class="btn btn-sm btn-dark" hx-put="/admin/suppliers/{{user_id}}" hx-vals='{"status": "Approved"}'>Approve</button>
+              <button type="button" class="btn btn-sm btn-dark" hx-put="/admin/suppliers/{{user_id}}" hx-vals='{"status": "Approved"}'
+                      {{#unless iso_certification}}hx-confirm="Approve {{company_name}} without an ISO certificate? Only if you checked that the company is legit."{{/unless}}>Approve</button>
               {{/if}}
               {{#if isRejected}}
               <button type="button" class="btn btn-sm btn-outline-secondary" hx-put="/admin/suppliers/{{user_id}}" hx-vals='{"status": "Pending"}'
                       hx-confirm="Undo the rejection of {{company_name}}? Their products become visible to buyers again.">Undo reject</button>
               {{else}}
-              <button type="button" class="btn btn-sm btn-outline-danger" hx-put="/admin/suppliers/{{user_id}}" hx-vals='{"status": "Rejected"}'
-                      hx-confirm="Reject {{company_name}}? Their {{plural product_count "product" "products"}} will be hidden from buyers, and they can no longer add or edit products.">Reject</button>
+              <button type="button" class="btn btn-sm btn-outline-danger" hx-get="/admin/suppliers/{{user_id}}/reject">Reject</button>
               {{/if}}
             </td>
           </tr>
+          {{/if}}
           {{/each}}
         </tbody>
       </table>
