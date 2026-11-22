@@ -1,0 +1,26 @@
+<div id="notifications" class="card shadow-sm h-100">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">Notifications {{#if unreadCount}}<span class="badge rounded-pill text-bg-dark ms-1">{{unreadCount}} new</span>{{/if}}</span>
+    {{#if unreadCount}}
+    <button type="button" class="btn btn-sm btn-outline-dark"
+            hx-post="/dashboard/notifications/read" hx-target="#notifications" hx-swap="outerHTML">Mark all as read</button>
+    {{/if}}
+  </div>
+  {{#if notifications.length}}
+  <ul class="list-group list-group-flush">
+    {{#each notifications}}
+    <li class="list-group-item small">
+      <div class="d-flex gap-2">
+        <span class="notification-dot{{#unless is_read}} unread{{/unless}}" aria-hidden="true"></span>
+        <div>
+          <div class="{{#unless is_read}}fw-semibold{{/unless}}">{{message}}</div>
+          <div class="text-muted">{{date created_at}}</div>
+        </div>
+      </div>
+    </li>
+    {{/each}}
+  </ul>
+  {{else}}
+  <div class="card-body small text-muted">No notifications yet. Updates about your account appear here.</div>
+  {{/if}}
+</div>

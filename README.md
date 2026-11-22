@@ -43,6 +43,7 @@ Every page that changes data uses HTMX: the server sends back only the changed p
 
 | Feature | Who | Page | Create | Read | Update | Delete |
 |---|---|---|---|---|---|---|
+| Dashboard | Everyone | `/dashboard` | - | Account details, 3 numbers per account type, recent purchases (Contractor), notifications | Mark notifications as read | - |
 | Categories | Admin manages, everyone browses | `/categories`, `/categories/manage` | Add category | Cards with search, products per category | Rename, description | Only when the category has no products |
 | Listings (My Products) | Supplier, Rental | `/listings` | Pick category and product (or add a new product, marked "New" until the Admin reviews it), set price, stock, minimum order, lead time | Own listings with search and pages | Price, stock, terms, description | With confirm |
 | Cart | Contractor | `/cart` | "Add to cart" on a product's offers page | Grouped by seller, with totals | Quantity (checked against stock and minimum order) | One line or all |
