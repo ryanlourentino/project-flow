@@ -1,5 +1,6 @@
 -- Admin tools (polish part 5): what buyers may see, plus demo data for the Admin pages.
 USE projectflow;
+SET NAMES 'utf8mb4';   -- this file is UTF-8
 
 -- 1. MarketListings: the listings buyers may see.
 -- A VIEW is a saved SELECT that can be used like a table. When the Admin rejects a Supplier,
