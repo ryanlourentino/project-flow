@@ -1,3 +1,25 @@
+# ERD Update (v3) — Web app tables (Assignment #4)
+
+**Why:** The web app turns the catalog into a marketplace. Several sellers can now offer the same catalog item at their own
+price, and Contractors collect offers in a cart before ordering. This needed two new tables and one new column. Each
+change is a numbered SQL file in `db/init/`, so a fresh database gets the same schema.
+
+**Entity count:** MVP 13 (was 11), Full Version 18 (was 16).
+
+| # | Table | Change | Reason | File |
+|---|---|---|---|---|
+| 1 | Categories | Added `description` (VARCHAR(255), optional) | Shown on the category cards; the Admin edits it. The 10 ETL categories get a short description. | `03_categories_description.sql`, `08_category_descriptions.sql` |
+| 2 | Listings (new) | `listing_id` PK, `item_id` FK → Items, `seller_id` FK → Users, `price`, `stock`, `min_order`, `lead_days`, `description`, `created_at`; UNIQUE (`item_id`, `seller_id`) | One seller's offer for one catalog item. This is the many-to-many table between sellers and items that v2 listed under "Future improvement". `price` is DECIMAL(12,2) like `avg_price`; CHECK constraints keep price, stock and lead time ≥ 0 and the minimum order ≥ 1. | `04`, `05`, `06_listings_*.sql` |
+| 3 | CartItems (new) | `cart_item_id` PK, `buyer_id` FK → Users, `listing_id` FK → Listings (ON DELETE CASCADE), `quantity` (≥ 1), `added_at`; UNIQUE (`buyer_id`, `listing_id`) | A Contractor's cart before ordering. When a seller deletes a listing, it simply disappears from carts. | `09_cart_items.sql` |
+
+**Items.listed_by** stays in the schema but is no longer used: who sells an item, and for how much, is now stored in
+`Listings` (several sellers per item instead of one).
+
+**Demo data** (marked so it is not mistaken for source data): an Admin account (`02_admin_user.sql`), demo offers with the
+description "Demo listing" (`07_demo_listings.sql`), and 3 demo projects for the demo Contractor (`10_demo_projects.sql`).
+
+---
+
 # ERD Update (v2) — Changelog
 
 **Why:** The professor's TSV files (materials, companies, transactions) don't fit the original ERD in a few places, and we don't need every column or every item provided. We kept only the data Project Flow uses: **materials sold by suppliers** and **equipment rented by equipment rental companies** (machines and rentable site equipment such as temporary lighting, movable barriers and temporary toilets), stored in one catalog that users can search by category. Construction work done by subcontractors (installation, excavation, scaffolding erection) is out of scope. The changes apply to both the MVP and Full Version diagrams.
@@ -77,3 +99,4 @@ Contractors, Suppliers, EquipmentRentals, Projects, ProjectDocumentation, Notifi
 
 ## Future improvement
 If several suppliers sell the same item, `listed_by` can be replaced by a many-to-many table (supplier, item, price).
+Done in v3: the `Listings` table.
