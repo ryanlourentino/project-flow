@@ -7,6 +7,7 @@
 
 <div class="eyebrow">{{#if seller.isRental}}Rental partner{{else}}Supplier{{/if}}</div>
 <h1 class="mb-1">{{seller.company_name}}</h1>
+{{#if seller.isRejected}}<div class="alert alert-secondary" role="status">This seller is not available on Project Flow right now.</div>{{/if}}
 <p class="mb-3">
   {{#if seller.isVerified}}<span class="badge rounded-pill badge-verified fw-normal">&#10003; Verified</span>{{/if}}
   {{#if seller.about}}<span class="text-muted ms-1">{{seller.about}}</span>{{/if}}

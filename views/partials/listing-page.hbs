@@ -2,6 +2,12 @@
   {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
   {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
 
+  {{#if isRejected}}
+  <div class="alert alert-secondary" role="status">
+    <strong>Your account was rejected by the Admin.</strong> Your products are hidden from buyers, and you cannot add or
+    change products. You can still delete them. Please contact Project Flow.
+  </div>
+  {{else}}
   <div class="card border-primary-subtle shadow-sm mb-4">
     <div class="card-header bg-primary-subtle text-primary-emphasis fw-semibold">Add a product</div>
     <div class="card-body bg-body-tertiary">
@@ -57,6 +63,7 @@
       {{/if}}
     </div>
   </div>
+  {{/if}}
 
   <h2 class="h5">Your products <span class="badge text-bg-dark">{{totalCount}}</span></h2>
   <div class="search-box mb-3">
