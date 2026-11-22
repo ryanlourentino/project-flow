@@ -1,4 +1,5 @@
-<option value="">{{#if itemOptions.length}}Choose an item...{{else}}Choose a category first{{/if}}</option>
+<option value="">{{#if categoryChosen}}Choose a product...{{else}}Choose a category first{{/if}}</option>
 {{#each itemOptions}}
-<option value="{{item_id}}" {{#if selected}}selected{{/if}}>{{item_name}} / {{unit}} (avg. {{money avg_price}})</option>
+<option value="{{item_id}}" {{#if selected}}selected{{/if}} {{#if already_listed}}disabled{{/if}}>{{item_name}} / {{unit}}{{#if avg_price}} (avg. {{money avg_price}}){{/if}}{{#if already_listed}} - already listed{{/if}}</option>
 {{/each}}
+{{#if categoryChosen}}<option value="new" {{#if newSelected}}selected{{/if}}>+ My product is not in this list...</option>{{/if}}

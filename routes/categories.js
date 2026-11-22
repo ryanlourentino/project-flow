@@ -104,12 +104,12 @@ async function loadCategoryItems(categoryId, rawQuery) {
   // LEFT JOIN keeps products that nobody sells yet (offer_count 0, lowest_price NULL).
   // "AND l.stock > 0" is in the ON part, so sold-out offers are left out of the count and the minimum.
   const [items] = await db.execute(
-    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable,
+    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable, i.is_reviewed,
             COUNT(l.listing_id) AS offer_count, MIN(l.price) AS lowest_price
        FROM Items i
        LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
       WHERE i.category_id = ? AND (? = '' OR i.item_name LIKE ?)
-      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable
+      GROUP BY i.item_id, i.item_name, i.unit, i.avg_price, i.is_rentable, i.is_reviewed
       ORDER BY COUNT(l.listing_id) = 0, i.item_name`,
     [categoryId, q, like]
   );

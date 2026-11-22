@@ -1,0 +1,73 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/categories">Categories</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{seller.company_name}}</li>
+  </ol>
+</nav>
+
+<div class="eyebrow">{{#if seller.isRental}}Rental partner{{else}}Supplier{{/if}}</div>
+<h1 class="mb-1">{{seller.company_name}}</h1>
+<p class="mb-3">
+  {{#if seller.isVerified}}<span class="badge rounded-pill badge-verified fw-normal">&#10003; Verified</span>{{/if}}
+  {{#if seller.about}}<span class="text-muted ms-1">{{seller.about}}</span>{{/if}}
+</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-8">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 fw-semibold small text-uppercase text-muted">Location</dt>
+          <dd class="col-sm-8">{{#if seller.location}}{{seller.location}}{{else}}-{{/if}}</dd>
+          <dt class="col-sm-4 fw-semibold small text-uppercase text-muted">Certificate</dt>
+          <dd class="col-sm-8">{{#if seller.iso_certification}}{{seller.iso_certification}}{{else}}<span class="text-muted">{{#if seller.isRental}}Not applicable{{else}}No certificate yet (verification {{seller.verification_status}}){{/if}}</span>{{/if}}</dd>
+          <dt class="col-sm-4 fw-semibold small text-uppercase text-muted">Contact</dt>
+          <dd class="col-sm-8 mb-0 text-muted">Email and phone are shared with the buyer after an order is placed.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-body d-flex justify-content-around align-items-center text-center">
+        <div><div class="fs-2 fw-semibold">{{onSaleCount}}</div><div class="small text-muted">{{onSaleLabel}}</div></div>
+        <div><div class="fs-2 fw-semibold">{{categoryCount}}</div><div class="small text-muted">{{categoryLabel}}</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5">Products <span class="badge text-bg-dark">{{offers.length}}</span></h2>
+{{#if offers.length}}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr class="small text-uppercase text-nowrap">
+          <th class="ps-3">Product</th>
+          <th>Category</th>
+          <th class="text-end">Price</th>
+          <th class="text-end">Stock</th>
+          <th class="pe-3">Terms</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each offers}}
+        <tr{{#unless stock}} class="text-muted"{{/unless}}>
+          <td class="ps-3"><a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a></td>
+          <td><span class="badge rounded-pill text-bg-light border fw-normal">{{category_name}}</span></td>
+          <td class="text-end text-nowrap"><span class="fw-semibold">{{money price}}</span> <span class="small text-muted">/ {{unit}}</span></td>
+          <td class="text-end">{{#if stock}}{{stock}}{{else}}<span class="badge text-bg-danger">Sold out</span>{{/if}}</td>
+          <td class="pe-3 small text-nowrap">
+            <div>Min. order {{min_order}}</div>
+            <div class="text-muted">{{#if lead_days}}{{plural lead_days "day" "days"}} lead time{{else}}Same-day delivery{{/if}}</div>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{else}}
+<p class="text-muted">This seller has no products on sale yet.</p>
+{{/if}}

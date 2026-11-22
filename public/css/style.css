@@ -124,3 +124,11 @@ html { scrollbar-gutter: stable; }
 
 /* ---------- Product type: Rental stands out in slate, Material stays light ---------- */
 .badge-rental { background-color: var(--pf-slate); color: #ffffff; }
+/* A product a seller added that the Admin has not reviewed yet: dashed outline, stays monochrome. */
+.badge-new { background-color: #ffffff; color: var(--pf-black); border: 1px dashed var(--pf-black); }
+
+/* ---------- Verified seller badge and the offer "Details" panel ---------- */
+.badge-verified { background-color: #ffffff; color: var(--pf-black); border: 1px solid var(--pf-black); }
+.offer-details { max-width: 26rem; }
+.offer-details summary { cursor: pointer; color: var(--pf-gray-700); }
+.offer-details[open] summary { color: var(--pf-black); font-weight: 600; }

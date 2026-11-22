@@ -9,7 +9,11 @@ const LEAD_MAX = 365;      // longest lead time in days
 const DESC_MAX = 500;      // Listings.description is VARCHAR(500)
 const PAGE_SIZE = 10;      // listings per page
 const PAGE_WINDOW = 3;     // page-number buttons shown at once (e.g. 1 2 3)
-const LIMITS = { stockMax: STOCK_MAX, leadMax: LEAD_MAX, descMax: DESC_MAX }; // for the inputs' max/maxlength
+const PRODUCT_NAME_MAX = 255; // Items.item_name is VARCHAR(255)
+const UNIT_MAX = 20;          // Items.unit is VARCHAR(20)
+const LIMITS = {               // for the inputs' max/maxlength
+  stockMax: STOCK_MAX, leadMax: LEAD_MAX, descMax: DESC_MAX, productNameMax: PRODUCT_NAME_MAX, unitMax: UNIT_MAX,
+};
 
 // Runs before every route in this file: tells the views whether prices are per day.
 router.use((req, res, next) => {
@@ -66,7 +70,7 @@ async function loadResults(sellerId, rawQuery, rawPage, edit = {}) {
   // so they can be written into the SQL directly.
   const [listings] = await db.execute(
     `SELECT l.listing_id, l.price, l.stock, l.min_order, l.lead_days, l.description,
-            i.item_name, i.unit, i.avg_price, c.category_name
+            i.item_name, i.unit, i.avg_price, i.is_reviewed, c.category_name
        ${from}
       ORDER BY i.item_name
       LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
@@ -97,33 +101,35 @@ async function loadResults(sellerId, rawQuery, rawPage, edit = {}) {
   };
 }
 
-// Dropdown 1: categories that still have items this seller can list, with how many.
+// Dropdown 1: categories with products of the seller's type, plus empty categories (a seller can add
+// the first product to a new category). With how many products there are and how many the seller lists.
 async function loadCategoryOptions(user, selectedId) {
   const [rows] = await db.execute(
-    `SELECT c.category_id, c.category_name, COUNT(*) AS available
-       FROM Items i
-       JOIN Categories c ON c.category_id = i.category_id
-      WHERE i.is_rentable = ?
-        AND NOT EXISTS (SELECT 1 FROM Listings l
-                         WHERE l.item_id = i.item_id AND l.seller_id = ?)
+    `SELECT c.category_id, c.category_name,
+            COUNT(i.item_id) AS item_count,
+            COALESCE(SUM(EXISTS (SELECT 1 FROM Listings l
+                                  WHERE l.item_id = i.item_id AND l.seller_id = ?)), 0) AS listed_count
+       FROM Categories c
+       LEFT JOIN Items i ON i.category_id = c.category_id AND i.is_rentable = ?
       GROUP BY c.category_id, c.category_name
+     HAVING item_count > 0 OR NOT EXISTS (SELECT 1 FROM Items x WHERE x.category_id = c.category_id)
       ORDER BY c.category_name = 'Others', c.category_name`,
-    [rentableFor(user), user.user_id]
+    [user.user_id, rentableFor(user)]
   );
-  return rows.map((c) => ({ ...c, selected: c.category_id === selectedId }));
+  return rows.map((c) => ({ ...c, listed_count: Number(c.listed_count), selected: c.category_id === selectedId }));
 }
 
-// Dropdown 2: the items of one category that this seller can still list.
+// Dropdown 2: every product of one category. Products the seller already lists are shown,
+// but disabled ("already listed"), so the seller sees they are in the catalog.
 async function loadItemOptions(user, categoryId, selectedId) {
   if (!Number.isInteger(categoryId) || categoryId <= 0) return []; // no category chosen yet
   const [rows] = await db.execute(
-    `SELECT i.item_id, i.item_name, i.unit, i.avg_price
+    `SELECT i.item_id, i.item_name, i.unit, i.avg_price, i.is_reviewed,
+            EXISTS (SELECT 1 FROM Listings l WHERE l.item_id = i.item_id AND l.seller_id = ?) AS already_listed
        FROM Items i
       WHERE i.category_id = ? AND i.is_rentable = ?
-        AND NOT EXISTS (SELECT 1 FROM Listings l
-                         WHERE l.item_id = i.item_id AND l.seller_id = ?)
-      ORDER BY i.item_name`,
-    [categoryId, rentableFor(user), user.user_id]
+      ORDER BY already_listed, i.item_name`,
+    [user.user_id, categoryId, rentableFor(user)]
   );
   return rows.map((i) => ({ ...i, selected: i.item_id === selectedId }));
 }
@@ -134,6 +140,10 @@ async function formData(req, opts = {}) {
   return {
     categoryOptions: await loadCategoryOptions(req.user, categoryId),
     itemOptions: await loadItemOptions(req.user, categoryId, Number(opts.newItemId)),
+    categoryChosen: Number.isInteger(categoryId) && categoryId > 0,
+    newSelected: opts.newItemId === 'new', // "My product is not in this list"
+    newProductName: opts.newProductName,
+    newProductUnit: opts.newProductUnit,
     message: opts.message,
     error: opts.error,
     newPrice: opts.newPrice,
@@ -184,6 +194,17 @@ async function renderPage(req, res, opts = {}) {
     resultsMessage: opts.resultsMessage,
     resultsError: opts.resultsError,
   });
+}
+
+// A product that is not in the catalog yet: name and unit typed by the seller.
+function cleanNewProduct(body) {
+  const name = String(body.new_name ?? '').trim().replace(/\s+/g, ' ');
+  if (!name) return { error: 'Please type the name of the new product.' };
+  if (name.length > PRODUCT_NAME_MAX) return { error: `Product name must be at most ${PRODUCT_NAME_MAX} characters.` };
+  const unit = String(body.new_unit ?? '').trim();
+  if (!unit) return { error: 'Please type the unit of the new product (e.g. Bag, kg, Hour).' };
+  if (unit.length > UNIT_MAX) return { error: `Unit must be at most ${UNIT_MAX} characters.` };
+  return { product: { name, unit } };
 }
 
 // Price: up to 10 digits before the point and 2 after (DECIMAL(12,2)), more than 0.
@@ -249,45 +270,99 @@ router.get('/results', safe(async (req, res) => {
 
 // The <option>s of the item dropdown, after a category is chosen (HTMX puts them into the <select>).
 router.get('/item-options', safe(async (req, res) => {
-  res.render('partials/listing-item-options', {
+  const categoryId = Number(req.query.category_id);
+  res.render('partials/listing-item-options-response', {
     layout: false,
-    itemOptions: await loadItemOptions(req.user, Number(req.query.category_id)),
+    itemOptions: await loadItemOptions(req.user, categoryId),
+    categoryChosen: Number.isInteger(categoryId) && categoryId > 0,
   });
 }));
 
-// CREATE
+// The "new product" fields (name and unit), shown when the seller picks "My product is not in this list".
+router.get('/new-product-fields', safe(async (req, res) => {
+  if (req.query.item_id !== 'new') return res.send('');
+  res.render('partials/listing-new-product', { layout: false, ...LIMITS });
+}));
+
+// CREATE: a listing for a catalog product, or (item_id = 'new') a new product plus its listing.
 router.post('/', safe(async (req, res) => {
   // If something is wrong, the form keeps what the seller typed.
   const keep = {
     newCategoryId: req.body.category_id,
     newItemId: req.body.item_id,
+    newProductName: req.body.new_name,
+    newProductUnit: req.body.new_unit,
     newPrice: req.body.price,
     newStock: req.body.stock,
     newMinOrder: req.body.min_order,
     newLeadDays: req.body.lead_days,
     newDescription: req.body.description,
   };
+  const isNew = req.body.item_id === 'new';
+  let itemId;
+  let name;
 
-  // The item must exist and match the seller's type (never trust the dropdown alone).
-  const itemId = Number(req.body.item_id);
-  if (!Number.isInteger(itemId) || itemId <= 0) {
-    return renderPage(req, res, { error: 'Please choose an item from the list.', ...keep });
+  if (isNew) {
+    // A new product goes into the chosen category, with the seller's type (material or rental).
+    const categoryId = Number(req.body.category_id);
+    const [categories] = await db.execute('SELECT category_id FROM Categories WHERE category_id = ?',
+      [Number.isInteger(categoryId) ? categoryId : 0]);
+    if (categories.length === 0) return renderPage(req, res, { error: 'Please choose a category.', ...keep });
+    const { product, error: productError } = cleanNewProduct(req.body);
+    if (productError) return renderPage(req, res, { error: productError, ...keep });
+    // No duplicates: the same name (upper/lower case does not matter) must be picked from the list.
+    const [same] = await db.execute('SELECT item_name FROM Items WHERE item_name = ?', [product.name]);
+    if (same.length > 0) {
+      return renderPage(req, res, { error: `"${same[0].item_name}" is already in the catalog. Choose it from the list.`, ...keep });
+    }
+    name = product.name;
+    keep.product = product;
+  } else {
+    // The item must exist and match the seller's type (never trust the dropdown alone).
+    itemId = Number(req.body.item_id);
+    if (!Number.isInteger(itemId) || itemId <= 0) {
+      return renderPage(req, res, { error: 'Please choose a product from the list.', ...keep });
+    }
+    const [items] = await db.execute('SELECT item_name, is_rentable FROM Items WHERE item_id = ?', [itemId]);
+    if (items.length === 0 || Number(items[0].is_rentable) !== rentableFor(req.user)) {
+      return renderPage(req, res, { error: 'Please choose a product from the list.', ...keep });
+    }
+    name = items[0].item_name;
   }
-  const [items] = await db.execute('SELECT item_name, is_rentable FROM Items WHERE item_id = ?', [itemId]);
-  if (items.length === 0 || Number(items[0].is_rentable) !== rentableFor(req.user)) {
-    return renderPage(req, res, { error: 'Please choose an item from the list.', ...keep });
-  }
-  const name = items[0].item_name;
 
   const { terms, error } = cleanTerms(req.body);
   if (error) return renderPage(req, res, { error, ...keep });
 
+  const insertListing = (conn, id) => conn.execute(
+    `INSERT INTO Listings (item_id, seller_id, price, stock, min_order, lead_days, description)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, req.user.user_id, terms.price, terms.stock, terms.minOrder, terms.leadDays, terms.description]
+  );
+
+  if (isNew) {
+    // Two INSERTs that belong together: a TRANSACTION makes sure we never keep a new product
+    // without its listing (if the second INSERT fails, ROLLBACK undoes the first).
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+      const [result] = await conn.execute(
+        `INSERT INTO Items (category_id, listed_by, item_name, unit, avg_price, is_rentable, is_reviewed)
+         VALUES (?, ?, ?, ?, NULL, ?, FALSE)`,
+        [Number(req.body.category_id), req.user.user_id, keep.product.name, keep.product.unit, rentableFor(req.user)]
+      );
+      await insertListing(conn, result.insertId);
+      await conn.commit();
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release(); // give the connection back to the pool
+    }
+    return renderPage(req, res, { message: `"${name}" was added to the catalog and is now listed. The Admin will review it.` });
+  }
+
   try {
-    await db.execute(
-      `INSERT INTO Listings (item_id, seller_id, price, stock, min_order, lead_days, description)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [itemId, req.user.user_id, terms.price, terms.stock, terms.minOrder, terms.leadDays, terms.description]
-    );
+    await insertListing(db, itemId);
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') {
       return renderPage(req, res, { error: `You already list "${name}". Edit that listing instead.` });
