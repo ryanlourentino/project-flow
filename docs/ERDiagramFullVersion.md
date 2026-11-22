@@ -12,6 +12,7 @@ erDiagram
         string password "MVP - Password"
         string phone "MVP - Phone Number"
         string address "MVP - Company Address"
+        string description "MVP - Company Description (About)"
         string account_type "MVP - Contractor/Supplier/Rental/Admin"
     }
 
