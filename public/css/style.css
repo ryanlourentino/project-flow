@@ -54,7 +54,8 @@ h2.h5            { font-size: 1.6rem; }
   border-color: var(--pf-black);
   box-shadow: 0 0 0 0.2rem rgba(17, 17, 17, 0.12);
 }
-.table-primary { --bs-table-bg: var(--pf-gray-100); --bs-table-color: var(--pf-black); }
+.table-primary { --bs-table-bg: var(--pf-gray-100); --bs-table-color: var(--pf-black);
+                 --bs-table-hover-bg: var(--pf-gray-100); --bs-table-hover-color: var(--pf-black); } /* no blue on hover */
 .pagination {
   --bs-pagination-color: var(--pf-black);
   --bs-pagination-hover-color: var(--pf-black);
@@ -132,3 +133,10 @@ html { scrollbar-gutter: stable; }
 .offer-details { max-width: 26rem; }
 .offer-details summary { cursor: pointer; color: var(--pf-gray-700); }
 .offer-details[open] summary { color: var(--pf-black); font-weight: 600; }
+
+/* ---------- Admin tabs (Manage) ---------- */
+.admin-tabs { --bs-nav-link-color: var(--pf-gray-700); --bs-nav-link-hover-color: var(--pf-black); --bs-nav-underline-link-active-color: var(--pf-black); }
+.admin-tabs .nav-link.active { border-bottom-color: var(--pf-black); font-weight: 600; }
+/* Supplier status badges: monochrome like the rest */
+.badge-rejected { background-color: var(--pf-black); color: #ffffff; }
+.badge-waiting  { background-color: var(--pf-gray-100); color: var(--pf-black); border: 1px solid var(--pf-gray-500); }

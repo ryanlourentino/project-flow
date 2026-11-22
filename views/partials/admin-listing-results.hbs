@@ -1,0 +1,61 @@
+<div id="admin-listing-results">
+  {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+  {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+  <input type="hidden" id="admin-listing-page" name="page" value="{{page}}">
+
+  {{#if matchCount}}
+  <p class="text-muted small mb-2">
+    Showing {{fromRow}}-{{toRow}} of {{matchCount}}{{#if q}} matching "<strong>{{q}}</strong>"{{/if}}
+    &middot; {{totalCount}} listings in total
+  </p>
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0"
+             hx-target="#admin-listing-results" hx-swap="outerHTML" hx-include="#admin-listing-search, #admin-listing-page">
+        <thead class="table-light">
+          <tr class="small text-uppercase text-nowrap">
+            <th class="ps-3">Product</th>
+            <th>Seller</th>
+            <th class="text-end">Price</th>
+            <th class="text-end">Stock</th>
+            <th>Added</th>
+            <th class="pe-3 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each listings}}
+          <tr>
+            <td class="ps-3">
+              <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
+              {{#unless is_reviewed}}<span class="badge rounded-pill badge-new fw-normal">New</span>{{/unless}}
+              <div class="small text-muted">
+                {{#if is_rentable}}<span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{/if}}
+                {{category_name}}
+              </div>
+              {{#if description}}<div class="small text-muted text-truncate" style="max-width: 28rem;" title="{{description}}">{{description}}</div>{{/if}}
+            </td>
+            <td>
+              <a href="/sellers/{{seller_id}}">{{company_name}}</a>
+              {{#if sellerRejected}}<div><span class="badge rounded-pill badge-rejected fw-normal">Rejected: hidden</span></div>{{/if}}
+            </td>
+            <td class="text-end text-nowrap">
+              <span class="fw-semibold">{{money price}}</span> <span class="small text-muted">/ {{unit}}</span>
+              {{#if avg_price}}<div class="small {{#if priceOdd}}fw-semibold text-danger{{else}}text-muted{{/if}}">avg. {{money avg_price}}</div>{{/if}}
+            </td>
+            <td class="text-end">{{stock}}</td>
+            <td class="small text-muted text-nowrap">{{date created_at}}</td>
+            <td class="pe-3 text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/admin/listings/{{listing_id}}"
+                      hx-confirm="Remove &quot;{{item_name}}&quot; by {{company_name}}? Buyers will no longer see it, it disappears from carts, and the seller is notified.">Remove</button>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{> pager pager=pager url="/admin/listings/results" target="#admin-listing-results" include="#admin-listing-search"}}
+  {{else}}
+  <p class="text-muted">No listings{{#if q}} match "<strong>{{q}}</strong>"{{/if}}.</p>
+  {{/if}}
+</div>

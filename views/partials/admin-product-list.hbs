@@ -1,0 +1,105 @@
+<div id="product-review" hx-target="#product-review" hx-swap="outerHTML">
+  {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+  {{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+
+  {{#if products.length}}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr class="small text-uppercase text-nowrap">
+            <th class="ps-3">Product</th>
+            <th>Category</th>
+            <th>Added by</th>
+            <th class="text-end">Listings</th>
+            <th class="pe-3 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each products}}
+          {{#if editing}}
+          <tr class="table-primary">
+            <td colspan="5" class="px-3">
+              <form hx-put="/admin/products/{{item_id}}" class="row g-2 align-items-end py-2">
+                <div class="col-md-6">
+                  <label for="edit-name" class="form-label small fw-semibold">Product name</label>
+                  <input id="edit-name" type="text" name="item_name" value="{{editName}}" maxlength="255" required autofocus class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                  <label for="edit-unit" class="form-label small fw-semibold">Unit</label>
+                  <input id="edit-unit" type="text" name="unit" value="{{editUnit}}" maxlength="20" required class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4">
+                  <label for="edit-category" class="form-label small fw-semibold">Category</label>
+                  <select id="edit-category" name="category_id" required class="form-select form-select-sm">
+                    {{#each categoryOptions}}
+                    <option value="{{category_id}}" {{#if selected}}selected{{/if}}>{{category_name}}</option>
+                    {{/each}}
+                  </select>
+                </div>
+                <div class="col-12 text-end">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/admin/products/list">Cancel</button>
+                  <button type="submit" class="btn btn-sm btn-dark">Save</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {{else if merging}}
+          <tr class="table-primary">
+            <td colspan="5" class="px-3">
+              <form hx-post="/admin/products/{{item_id}}/merge" class="row g-2 align-items-end py-2"
+                    hx-confirm="Merge &quot;{{item_name}}&quot; into the chosen product? Its listings move there and this product is deleted.">
+                <div class="col-12 small">
+                  Merge <strong>{{item_name}}</strong> / {{unit}} into an existing {{category_name}} product.
+                  If a seller already lists that product, their duplicate listing is removed.
+                </div>
+                <div class="col-md-9">
+                  <label for="merge-target" class="form-label small fw-semibold">Existing product</label>
+                  <select id="merge-target" name="target_id" required class="form-select form-select-sm">
+                    <option value="">Choose the product it duplicates...</option>
+                    {{#if similarTargets.length}}
+                    <optgroup label="Similar names">
+                      {{#each similarTargets}}<option value="{{item_id}}">{{item_name}} / {{unit}}</option>{{/each}}
+                    </optgroup>
+                    {{/if}}
+                    <optgroup label="Other products in {{category_name}}">
+                      {{#each otherTargets}}<option value="{{item_id}}">{{item_name}} / {{unit}}</option>{{/each}}
+                    </optgroup>
+                  </select>
+                  <div class="form-text">Is it in another category? Edit its category first.</div>
+                </div>
+                <div class="col-md-3 text-end">
+                  <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/admin/products/list">Cancel</button>
+                  <button type="submit" class="btn btn-sm btn-dark">Merge</button>
+                </div>
+              </form>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td class="ps-3">
+              <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a> <span class="small text-muted">/ {{unit}}</span>
+              {{#if is_rentable}}<div><span class="badge rounded-pill badge-rental fw-normal">Rental</span></div>{{/if}}
+            </td>
+            <td>{{category_name}}</td>
+            <td>{{#if added_by}}<a href="/sellers/{{added_by_id}}">{{added_by}}</a>{{else}}-{{/if}}</td>
+            <td class="text-end">{{listing_count}}</td>
+            <td class="pe-3 text-end text-nowrap">
+              <button type="button" class="btn btn-sm btn-dark" hx-post="/admin/products/{{item_id}}/approve">Approve</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/admin/products/{{item_id}}/edit">Edit</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" hx-get="/admin/products/{{item_id}}/merge">Merge</button>
+              <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/admin/products/{{item_id}}"
+                      hx-confirm="Remove &quot;{{item_name}}&quot; from the catalog? Its {{plural listing_count "listing" "listings"}} will be deleted too, and the sellers are notified.">Remove</button>
+            </td>
+          </tr>
+          {{/if}}
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{else}}
+  <p class="text-muted">Nothing to review. When a seller adds a product that is not in the catalog, it shows up here.</p>
+  {{/if}}
+</div>
+{{#unless title}}{{> admin-tabs oob=true}}{{/unless}}

@@ -1,0 +1,17 @@
+<div class="eyebrow">Admin</div>
+<h1 class="mb-3">Manage</h1>
+{{> admin-tabs}}
+
+<p class="text-muted">
+  Check the certificates Suppliers send in. <strong>Approve</strong> gives the Verified badge.
+  <strong>Reject</strong> hides all their products from buyers and stops them from adding or editing products.
+</p>
+
+<div class="search-box mb-3">
+  {{> search-icon}}
+  <input id="supplier-search" type="search" name="q" maxlength="100" class="form-control" placeholder="Search by company or certificate..."
+         hx-get="/admin/suppliers/results" hx-trigger="input changed delay:300ms, search"
+         hx-target="#supplier-results" hx-swap="outerHTML" hx-include="#supplier-filter">
+</div>
+
+{{> admin-supplier-results}}

@@ -1,0 +1,29 @@
+{{!-- Page buttons for an HTMX table. Use: {{> pager pager=pager url="/admin/listings/results"
+      target="#admin-listing-results" include="#admin-listing-search"}} --}}
+{{#if pager}}
+<nav aria-label="Pages" class="mt-3">
+  <ul class="pagination justify-content-center" hx-target="{{target}}" hx-swap="outerHTML" hx-include="{{include}}">
+    <li class="page-item {{#if pager.atStart}}disabled{{/if}}">
+      <button type="button" class="page-link" aria-label="First page" {{#if pager.atStart}}disabled{{/if}}
+              hx-get="{{url}}" hx-vals='{"page": {{pager.first}} }'>&laquo;</button>
+    </li>
+    <li class="page-item {{#if pager.atStart}}disabled{{/if}}">
+      <button type="button" class="page-link" aria-label="Previous page" {{#if pager.atStart}}disabled{{/if}}
+              hx-get="{{url}}" hx-vals='{"page": {{pager.prev}} }'>&lsaquo;</button>
+    </li>
+    {{#each pager.numbers}}
+    <li class="page-item {{#if current}}active{{/if}}" {{#if current}}aria-current="page"{{/if}}>
+      <button type="button" class="page-link" hx-get="{{../url}}" hx-vals='{"page": {{number}} }'>{{number}}</button>
+    </li>
+    {{/each}}
+    <li class="page-item {{#if pager.atEnd}}disabled{{/if}}">
+      <button type="button" class="page-link" aria-label="Next page" {{#if pager.atEnd}}disabled{{/if}}
+              hx-get="{{url}}" hx-vals='{"page": {{pager.next}} }'>&rsaquo;</button>
+    </li>
+    <li class="page-item {{#if pager.atEnd}}disabled{{/if}}">
+      <button type="button" class="page-link" aria-label="Last page" {{#if pager.atEnd}}disabled{{/if}}
+              hx-get="{{url}}" hx-vals='{"page": {{pager.last}} }'>&raquo;</button>
+    </li>
+  </ul>
+</nav>
+{{/if}}
