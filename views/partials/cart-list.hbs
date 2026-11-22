@@ -9,7 +9,7 @@
       <div class="card shadow-sm mb-3">
         <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
           <span class="fw-semibold">{{seller_name}}</span>
-          <span class="small text-muted">{{#if maxLeadDays}}Delivery in up to {{maxLeadDays}} days{{else}}Same-day delivery{{/if}}</span>
+          <span class="small text-muted">{{#if maxLeadDays}}Delivery in up to {{plural maxLeadDays "day" "days"}}{{else}}Same-day delivery{{/if}}</span>
         </div>
         <div class="table-responsive">
           <table class="table align-middle mb-0" hx-target="#cart" hx-swap="outerHTML">

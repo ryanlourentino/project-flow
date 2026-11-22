@@ -8,11 +8,11 @@
 
 <h1 class="h4 mb-1">{{item.item_name}}</h1>
 <p class="text-muted">
-  {{#if item.is_rentable}}<span class="badge text-bg-info">Rental</span>{{else}}<span class="badge text-bg-secondary">Material</span>{{/if}}
+  {{#if item.is_rentable}}<span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{else}}<span class="badge rounded-pill text-bg-light border fw-normal">Material</span>{{/if}}
   Market average {{money item.avg_price}} / {{item.unit}}
 </p>
 
-<h2 class="h5">Offers <span class="badge text-bg-secondary">{{offers.length}}</span></h2>
+<h2 class="h5">Offers <span class="badge text-bg-dark">{{offers.length}}</span></h2>
 {{#if offers.length}}
 <p class="text-muted small mb-2">{{inStockCount}} in stock. Cheapest in-stock offer first.</p>
 <div class="card shadow-sm">
@@ -53,7 +53,7 @@
           </td>
           <td class="pe-3 small text-nowrap">
             <div>Min. order {{min_order}}</div>
-            <div class="text-muted">{{#if lead_days}}{{lead_days}} days lead time{{else}}Same-day delivery{{/if}}</div>
+            <div class="text-muted">{{#if lead_days}}{{plural lead_days "day" "days"}} lead time{{else}}Same-day delivery{{/if}}</div>
           </td>
           {{#if @root.isBuyer}}
           <td class="pe-3 text-end">

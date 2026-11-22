@@ -14,7 +14,7 @@ async function loadCategories() {
        FROM Categories c
        LEFT JOIN Items i ON i.category_id = c.category_id
       GROUP BY c.category_id, c.category_name, c.description
-      ORDER BY c.category_name`
+      ORDER BY c.category_name = 'Others', c.category_name`
   );
   return rows;
 }
@@ -82,7 +82,7 @@ async function loadCategoryCards(rawQuery) {
        LEFT JOIN Listings l ON l.item_id = i.item_id AND l.stock > 0
       GROUP BY c.category_id, c.category_name, c.description
      HAVING ? = '' OR c.category_name LIKE ? OR c.description LIKE ? OR match_count > 0
-      ORDER BY c.category_name`,
+      ORDER BY c.category_name = 'Others', c.category_name`,
     [q, like, q, like, like]
   );
   return {

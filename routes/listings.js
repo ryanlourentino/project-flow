@@ -107,7 +107,7 @@ async function loadCategoryOptions(user, selectedId) {
         AND NOT EXISTS (SELECT 1 FROM Listings l
                          WHERE l.item_id = i.item_id AND l.seller_id = ?)
       GROUP BY c.category_id, c.category_name
-      ORDER BY c.category_name`,
+      ORDER BY c.category_name = 'Others', c.category_name`,
     [rentableFor(user), user.user_id]
   );
   return rows.map((c) => ({ ...c, selected: c.category_id === selectedId }));

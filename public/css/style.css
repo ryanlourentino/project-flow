@@ -1,7 +1,7 @@
 /* Project Flow theme
    Colors: monochrome (black, white and greys), like the business proposal.
-   Fonts:  headings in Bebas Neue, body text in Tenorite (the proposal's font, installed with
-           Microsoft Office) or Figtree, a free web font that looks similar, when Tenorite is missing. */
+   Fonts:  headings in Bebas Neue, body text in Figtree (the same style as Tenorite, the proposal's font,
+           but a web font, so every computer shows exactly the same thing). */
 
 :root {
   --pf-black: #111111;
@@ -9,9 +9,10 @@
   --pf-gray-500: #8a8a8a;
   --pf-gray-200: #e4e4e4;
   --pf-gray-100: #f4f4f4;
+  --pf-slate: #2e3b52;      /* the only accent colour, from the proposal's building photo: Rental badges */
 
   /* Bootstrap reads these variables, so changing them recolors buttons, links, badges... */
-  --bs-body-font-family: Tenorite, "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bs-body-font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --bs-body-color: #1d1d1d;
   --bs-primary: var(--pf-black);
   --bs-primary-rgb: 17, 17, 17;
@@ -117,3 +118,9 @@ html { scrollbar-gutter: stable; }
 /* ---------- Success messages fade out (public/js/app.js removes them after 20 s) ---------- */
 .alert-success { transition: opacity 0.6s ease; }
 .alert-success.alert-fading { opacity: 0; }
+
+/* ---------- Badges: text exactly in the middle of the pill ---------- */
+.badge { display: inline-flex; align-items: center; justify-content: center; line-height: 1; vertical-align: middle; }
+
+/* ---------- Product type: Rental stands out in slate, Material stays light ---------- */
+.badge-rental { background-color: var(--pf-slate); color: #ffffff; }

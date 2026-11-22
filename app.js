@@ -14,6 +14,8 @@ const moneyFormat = new Intl.NumberFormat('en-US', { style: 'currency', currency
 const helpers = {
   money: (value) => (value === null || value === undefined || value === '' ? '-' : moneyFormat.format(Number(value))),
   currency: () => CURRENCY, // {{currency}} shows "USD", e.g. in form labels
+  // {{plural count "day" "days"}} shows "1 day" or "3 days".
+  plural: (count, one, many) => `${count} ${Number(count) === 1 ? one : many}`,
 };
 app.engine('hbs', engine({ extname: '.hbs', defaultLayout: 'main', helpers }));
 app.set('view engine', 'hbs');

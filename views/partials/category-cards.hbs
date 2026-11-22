@@ -10,8 +10,8 @@
           <h2 class="card-title mb-1">{{category_name}}</h2>
           <p class="small text-muted flex-grow-1">{{description}}</p>
           <div class="d-flex flex-wrap gap-2">
-            <span class="badge rounded-pill text-bg-light border fw-normal">{{item_count}} products</span>
-            {{#if offered_count}}<span class="badge rounded-pill text-bg-dark fw-normal">{{offered_count}} with offers</span>{{/if}}
+            <span class="badge rounded-pill text-bg-light border fw-normal">{{plural item_count "product" "products"}}</span>
+            {{#if offered_count}}<span class="badge rounded-pill text-bg-dark fw-normal">{{offered_count}} on sale</span>{{/if}}
             {{#if match_count}}<span class="badge rounded-pill text-bg-light border border-dark fw-normal">{{match_count}} matching</span>{{/if}}
           </div>
         </div>
