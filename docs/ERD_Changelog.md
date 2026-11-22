@@ -13,8 +13,10 @@ change is a numbered SQL file in `db/init/`, so a fresh database gets the same s
 | 3 | Users | Added `description` (VARCHAR(255)), filled by the ETL from companies.tsv | The company's own business description, shown to buyers as the seller's "About" text. Before v3 it was only used to derive `account_type`. | `01_etl.sql` |
 | 4 | CartItems (new) | `cart_item_id` PK, `buyer_id` FK → Users, `listing_id` FK → Listings (ON DELETE CASCADE), `quantity` (≥ 1), `added_at`; UNIQUE (`buyer_id`, `listing_id`) | A Contractor's cart before ordering. When a seller deletes a listing, it simply disappears from carts. | `09_cart_items.sql` |
 
-**Items.listed_by** stays in the schema but is no longer used: who sells an item, and for how much, is now stored in
-`Listings` (several sellers per item instead of one).
+| 5 | Items | Added `is_reviewed` (BOOLEAN, default TRUE); `source_material_id` and `avg_price` may now be NULL | A seller can add a product that is not in the catalog yet. It gets `is_reviewed` = FALSE (shown as "New") until the Admin has checked it, has no source material ID and no market average yet. | `12_seller_products.sql` |
+
+**Items.listed_by** no longer says who *sells* an item (that is in `Listings`, several sellers per item). It now records
+the seller who *added* a product in the app; it is NULL for the products that came from the source data.
 
 **Item names** (ETL step 2.6): a part in brackets is attached to the part before it ("Fine aggregate (Coarse sand, for
 mixing)" instead of "Fine aggregate - (Coarse sand, for mixing)"), names that are only a bracket lose the brackets, and

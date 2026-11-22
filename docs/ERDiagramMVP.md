@@ -48,13 +48,14 @@ erDiagram
 
     Items {
         int item_id PK "MVP - Item ID"
-        string source_material_id "MVP - Source Material ID"
+        string source_material_id "MVP - Source Material ID (NULL if added by a seller)"
         int category_id FK "MVP - Item Category"
-        int listed_by FK "MVP - Listed By Supplier/Rental Partner"
+        int listed_by FK "MVP - Added By Seller (NULL = source data)"
         string item_name "MVP - Item Name"
         string unit "MVP - Unit (kg/Piece/Hour/Day/...)"
-        float avg_price "MVP - Average Market Price"
+        float avg_price "MVP - Average Market Price (NULL if unknown)"
         boolean is_rentable "MVP - For Rent (true) or For Sale (false)"
+        boolean is_reviewed "MVP - Checked by the Admin (false = New)"
     }
 
     %% ==========================================
