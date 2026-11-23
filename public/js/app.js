@@ -1,6 +1,7 @@
 // Small browser-side helpers for every page (loaded in views/layouts/main.hbs, after HTMX).
 
-// Success messages (green alerts) fade out and disappear by themselves after 5 seconds.
+// Success messages (green alerts, and small messages marked "autohide" such as "Added to cart")
+// fade out and disappear by themselves after 5 seconds.
 // htmx.onLoad runs once for the whole page when it opens, and again for every piece of HTML
 // that HTMX swaps in later (that is where new messages come from after Save, Delete, ...).
 (function () {
@@ -16,8 +17,9 @@
     }, HIDE_AFTER_MS);
   }
 
+  const SELECTOR = '.alert-success, .autohide';
   htmx.onLoad((root) => {
-    if (root.matches && root.matches('.alert-success')) hideLater(root);
-    root.querySelectorAll('.alert-success').forEach(hideLater);
+    if (root.matches && root.matches(SELECTOR)) hideLater(root);
+    root.querySelectorAll(SELECTOR).forEach(hideLater);
   });
 })();

@@ -117,8 +117,8 @@ h2.h5            { font-size: 1.6rem; }
 html { scrollbar-gutter: stable; }
 
 /* ---------- Success messages fade out (public/js/app.js removes them after 20 s) ---------- */
-.alert-success { transition: opacity 0.6s ease; }
-.alert-success.alert-fading { opacity: 0; }
+.alert-success, .autohide { transition: opacity 0.6s ease; }
+.alert-fading { opacity: 0; }
 
 /* ---------- Badges: text exactly in the middle of the pill ---------- */
 .badge { display: inline-flex; align-items: center; justify-content: center; line-height: 1; vertical-align: middle; }
@@ -140,3 +140,11 @@ html { scrollbar-gutter: stable; }
 /* Supplier status badges: monochrome like the rest */
 .badge-rejected { background-color: var(--pf-black); color: #ffffff; }
 .badge-waiting  { background-color: var(--pf-gray-100); color: var(--pf-black); border: 1px solid var(--pf-gray-500); }
+
+/* ---------- Dashboard ---------- */
+.stat-tile { border-color: var(--pf-gray-200); }
+.stat-tile-link { transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; }
+.stat-tile-link:hover { border-color: var(--pf-black); transform: translateY(-2px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.06); }
+.stat-value { font-family: "Bebas Neue", Impact, "Arial Narrow", sans-serif; font-size: 2.6rem; line-height: 1; }
+.notification-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; margin-top: 0.4rem; border-radius: 50%; background: var(--pf-gray-200); }
+.notification-dot.unread { background: var(--pf-black); }
