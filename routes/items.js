@@ -3,6 +3,7 @@
 const express = require('express');
 const db = require('../db');
 const { locationOf, isVerified } = require('../lib/sellers');
+const { dayText, today } = require('../lib/orders');
 
 const router = express.Router();
 
@@ -57,6 +58,7 @@ router.get('/:id(\\d+)', async (req, res, next) => {
         isBelowAvg: comparison.below,
         isVerified: isVerified(o),
         location: locationOf(o.address),
+        earliestStart: dayText(today() + Number(o.lead_days)), // rentals: the first day the machine can come
       };
     });
 

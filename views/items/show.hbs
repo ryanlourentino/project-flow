@@ -76,12 +76,26 @@
           {{#if @root.isBuyer}}
           <td class="pe-3 text-end">
             {{#if stock}}
-            <form class="d-flex justify-content-end align-items-center gap-2"
+            <form class="d-flex flex-column align-items-end gap-1"
                   hx-post="/cart" hx-target="#add-result-{{listing_id}}" hx-swap="innerHTML">
               <input type="hidden" name="listing_id" value="{{listing_id}}">
-              <input type="number" name="quantity" value="{{min_order}}" min="1" max="{{stock}}" step="1" required
-                     class="form-control form-control-sm" style="width: 5.5rem" aria-label="Quantity">
-              <button type="submit" class="btn btn-sm btn-primary text-nowrap">Add to cart</button>
+              {{#if @root.item.is_rentable}}
+              {{!-- Rentals: how long. Both days are included; the earliest start follows the seller's lead time. --}}
+              <div class="d-flex align-items-center gap-1 small">
+                <input type="date" name="rent_start" value="{{earliestStart}}" min="{{earliestStart}}" required
+                       class="form-control form-control-sm" style="width: 9.5rem" aria-label="Rental start">
+                <span class="text-muted">to</span>
+                <input type="date" name="rent_end" value="{{earliestStart}}" min="{{earliestStart}}" required
+                       class="form-control form-control-sm" style="width: 9.5rem" aria-label="Rental end">
+              </div>
+              {{/if}}
+              <div class="d-flex align-items-center gap-2">
+                <input type="number" name="quantity" value="{{min_order}}" min="1" max="{{stock}}" step="1" required
+                       class="form-control form-control-sm" style="width: 5.5rem"
+                       aria-label="{{#if @root.item.is_rentable}}Machines{{else}}Quantity{{/if}}">
+                {{#if @root.item.is_rentable}}<span class="small text-muted">machines</span>{{/if}}
+                <button type="submit" class="btn btn-sm btn-primary text-nowrap">Add to cart</button>
+              </div>
             </form>
             <div id="add-result-{{listing_id}}" class="mt-1"></div>
             {{/if}}

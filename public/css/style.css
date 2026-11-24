@@ -117,7 +117,7 @@ h2.h5            { font-size: 1.6rem; }
 html { scrollbar-gutter: stable; }
 
 /* ---------- Success messages fade out (public/js/app.js removes them after 20 s) ---------- */
-.alert-success, .autohide { transition: opacity 0.6s ease; }
+.alert-success, .alert-danger, .autohide, .autohide-error { transition: opacity 0.6s ease; }
 .alert-fading { opacity: 0; }
 
 /* ---------- Badges: text exactly in the middle of the pill ---------- */

@@ -1,7 +1,7 @@
+{{!-- autohide / autohide-error: the message fades out after 5 / 8 seconds, like the alerts (public/js/app.js). --}}
 {{#if error}}
-<span class="small text-danger">{{error}}</span>
+<span class="autohide-error small text-danger">{{error}}</span>
 {{else}}
-{{!-- autohide: fades out after 5 seconds, like the green alerts (public/js/app.js). --}}
 <span class="autohide"><span class="small text-success">{{message}}</span> <a href="/cart" class="small">View cart</a></span>
 {{/if}}
 {{> cart-count oob=true}}

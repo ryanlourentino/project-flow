@@ -4,7 +4,7 @@ const express = require('express');
 const db = require('../db');
 const { countCart, loadCartRows, groupCart, problemFor } = require('../lib/cart');
 const {
-  RENTAL_DAYS_MAX, dayNumber, dayText, isoDay, today, rentalDays, lineCents, rentalBasis,
+  checkPeriod, dayNumber, isoDay, rentalDays, lineCents, rentalBasis,
 } = require('../lib/orders');
 const { notify } = require('../lib/notify');
 
@@ -36,36 +36,13 @@ async function loadProjects(contractorId, selectedId) {
   return rows.map((p) => ({ ...p, selected: p.proj_id === selectedId }));
 }
 
-// The rental period typed for one cart line (fields start_<id> and end_<id>), checked.
-// Earliest start: today + the seller's lead time. Empty fields get a 1-day period on the earliest day.
-function rentalPeriod(row, body) {
-  const earliest = today() + Number(row.lead_days);
-  const startText = body[`start_${row.cart_item_id}`] || dayText(earliest);
-  const endText = body[`end_${row.cart_item_id}`] || startText;
-  const period = { startText, endText, min: dayText(earliest) };
-  const start = dayNumber(startText);
-  const end = dayNumber(endText);
-  if (start === null || end === null) return { ...period, error: 'Please choose a start and an end date.' };
-  if (start < earliest) return { ...period, error: `The earliest start is ${dayText(earliest)} (lead time ${row.lead_days} ${Number(row.lead_days) === 1 ? 'day' : 'days'}).` };
-  if (end < start) return { ...period, error: 'The end date must be on or after the start date.' };
-  if (rentalDays(start, end) > RENTAL_DAYS_MAX) return { ...period, error: `A rental can last at most ${RENTAL_DAYS_MAX} days.` };
-  return { ...period, start, end, days: rentalDays(start, end) };
-}
-
-// Everything the checkout page needs, from the cart lines and what the Contractor typed (body).
+// Everything the checkout page needs: the cart (rental dates included) and what the Contractor typed (body).
 async function checkoutData(req, rows, body = {}) {
-  const periods = {};
-  for (const row of rows) {
-    if (Number(row.is_rentable)) periods[row.cart_item_id] = rentalPeriod(row, body);
-  }
-  const cart = groupCart(rows, periods);
-  const projId = Number(body.proj_id);
   return {
-    ...cart,
-    projects: await loadProjects(req.contractorId, projId),
+    ...groupCart(rows),
+    projects: await loadProjects(req.contractorId, Number(body.proj_id)),
     note: body.note ?? '',
     noteMax: NOTE_MAX,
-    hasDateErrors: Object.values(periods).some((p) => p.error),
   };
 }
 
@@ -87,10 +64,25 @@ router.get('/checkout', safe(async (req, res) => {
   res.render('orders/checkout', { title: 'Checkout', ...(await checkoutData(req, rows)) });
 }));
 
-// Live update while the Contractor fills in the form (a rental date changed): new totals, nothing saved.
+// Live update while the Contractor fills in the form. A changed rental period is saved in the cart
+// (the cart keeps the dates, the order copies them); nothing is ordered here.
 router.post('/checkout/preview', safe(async (req, res) => {
-  const rows = await loadCartRows(db, req.user.user_id);
-  res.render('partials/checkout-form', { layout: false, ...(await checkoutData(req, rows, req.body)) });
+  let rows = await loadCartRows(db, req.user.user_id);
+  let error = null;
+  for (const row of rows.filter((r) => Number(r.is_rentable))) {
+    const startText = req.body[`start_${row.cart_item_id}`];
+    const endText = req.body[`end_${row.cart_item_id}`];
+    if (startText === undefined || endText === undefined) continue;
+    const check = checkPeriod(startText, endText, row.lead_days);
+    if (check.error) {
+      error = `"${row.item_name}": ${check.error}`;
+    } else {
+      await db.execute('UPDATE CartItems SET rent_start = ?, rent_end = ? WHERE cart_item_id = ? AND buyer_id = ?',
+        [startText, endText, row.cart_item_id, req.user.user_id]);
+    }
+  }
+  rows = await loadCartRows(db, req.user.user_id); // read again: the new dates change the totals
+  res.render('partials/checkout-form', { layout: false, ...(await checkoutData(req, rows, req.body)), error });
 }));
 
 // CREATE: place the orders. Everything happens in one transaction: if anything is wrong, nothing is saved.
@@ -121,8 +113,7 @@ router.post('/', safe(async (req, res) => {
     else if (!project) error = 'Please choose the project these products are for.';
     else if (!project.proj_address) error = `Project "${project.proj_name}" has no site address. Add one on the Projects page first.`;
     else if (note.length > NOTE_MAX) error = `The note can have at most ${NOTE_MAX} characters.`;
-    else if (data.hasProblems) error = 'Something in your cart changed (stock, minimum order or seller). Please check the items marked in red.';
-    else if (data.hasDateErrors) error = 'Please fix the rental dates marked in red.';
+    else if (data.hasProblems) error = 'Please check the items marked in red (stock, minimum order, seller or rental dates).';
     // The total the Contractor saw on the page must still be the total now (a seller may have changed a price).
     else if (Number(req.body.expected_total) !== data.totalCents) {
       error = `A price changed while you were ordering. The new total is ${moneyText(data.totalCents)}. Please check and order again.`;

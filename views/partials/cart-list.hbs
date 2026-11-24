@@ -29,13 +29,25 @@
                   <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
                   {{#if isRental}}<span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{/if}}
                   <div class="small text-muted">Min. order {{min_order}} &middot; {{stock}} {{#if isRental}}available{{else}}in stock{{/if}}</div>
+                  {{#if isRental}}
+                  {{!-- The rental period: a change saves the dates (the row's inputs are sent together). --}}
+                  <div class="d-flex flex-wrap align-items-center gap-1 mt-1 small">
+                    <input type="date" name="rent_start" value="{{period.startText}}" min="{{period.min}}" required
+                           class="form-control form-control-sm" style="width: 8.25rem" aria-label="Rental start of {{item_name}}"
+                           hx-put="/cart/{{cart_item_id}}" hx-trigger="change" hx-include="closest tr">
+                    <span class="text-muted">to</span>
+                    <input type="date" name="rent_end" value="{{period.endText}}" min="{{period.min}}" required
+                           class="form-control form-control-sm" style="width: 8.25rem" aria-label="Rental end of {{item_name}}"
+                           hx-put="/cart/{{cart_item_id}}" hx-trigger="change" hx-include="closest tr">
+                  </div>
+                  {{/if}}
                   {{#if problem}}<div class="small text-danger fw-semibold">{{problem}}</div>{{/if}}
                 </td>
                 <td class="text-end text-nowrap">{{money price}} <span class="small text-muted">/ {{unit}}</span></td>
                 <td class="text-center">
                   <input type="number" name="quantity" value="{{quantity}}" min="{{min_order}}" max="{{stock}}" step="1"
                          class="form-control form-control-sm mx-auto" style="width: 6rem" aria-label="Quantity of {{item_name}}"
-                         hx-put="/cart/{{cart_item_id}}" hx-trigger="change">
+                         hx-put="/cart/{{cart_item_id}}" hx-trigger="change" hx-include="closest tr">
                   {{#if isRental}}<div class="small text-muted">{{plural quantity "machine" "machines"}}</div>{{/if}}
                 </td>
                 <td class="text-end text-nowrap">
@@ -71,9 +83,6 @@
           <div class="d-flex justify-content-between align-items-baseline border-top pt-3 mb-3">
             <span class="fw-semibold">Total</span><span class="fs-4 fw-semibold">{{money total}}</span>
           </div>
-          {{#if hasRentals}}
-          <p class="small text-muted">Rentals are counted for 1 day here. You choose the rental dates at checkout.</p>
-          {{/if}}
           {{#if hasProblems}}
           <div class="alert alert-warning small py-2">Fix the items marked in red before ordering.</div>
           <button type="button" class="btn btn-primary w-100 mb-2" disabled>Continue to checkout</button>
