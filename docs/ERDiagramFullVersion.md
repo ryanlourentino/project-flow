@@ -126,18 +126,28 @@ erDiagram
         int order_id PK "MVP - Unique Order ID"
         string source_transaction_id "MVP - Source Transaction ID"
         int contractor_id FK "MVP - Placed By"
+        int seller_id FK "MVP - Received By Supplier/Rental Partner (NULL = source data)"
         int proj_id FK "MVP - For Project"
+        string delivery_address "MVP - Project Site Address When Ordered"
         date order_date "MVP - Date Placed"
-        string order_status "MVP - Pending/Processed/Delivered"
+        datetime ordered_at "MVP - Date and Time Placed"
+        string order_status "MVP - Pending/Accepted/Dispatched/Delivered/On site/Returned/Declined/Cancelled"
         float total_value "MVP - Order Value for Commission"
+        string note "MVP - Contractor's Note to the Seller"
+        date planned_date "MVP - Delivery Date Planned by the Seller"
     }
 
     OrderItems {
         int order_id PK, FK "MVP - Links to Order"
         int item_id PK, FK "MVP - Links to Item"
-        int quantity "MVP - Quantity or Rental Duration"
-        float unit_price "MVP - Price Per Unit"
+        int listing_id FK "MVP - Offer the Line Came From"
+        int quantity "MVP - Quantity (Rentals: Number of Machines)"
+        float unit_price "MVP - Price Per Unit When Ordered"
         float discount_rate "MVP - Discount Percentage"
+        string line_status "MVP - Pending/Accepted/Declined (Partial Accept)"
+        string decline_reason "MVP - Why the Seller Declined the Line"
+        date rent_start "MVP - Rental Start Date"
+        date rent_end "MVP - Rental End Date (Included)"
     }
 
     AI_AuxiliaryRecommendations {
@@ -190,6 +200,8 @@ erDiagram
     Users ||--o{ Listings : "sells (MVP)"
     Users ||--o{ CartItems : "keeps in cart (MVP)"
     Listings ||--o{ CartItems : "added to cart (MVP)"
+    Users ||--o{ PurchaseOrders : "receives orders (MVP)"
+    Listings |o--o{ OrderItems : "ordered as (MVP)"
 
     PurchaseOrders ||--o{ OrderItems : "contains (MVP)"
     
