@@ -39,6 +39,7 @@ app.use((req, res, next) => {
     products: req.path.startsWith('/listings'),
     cart: req.path.startsWith('/cart'),
     projects: req.path.startsWith('/projects'),
+    orders: req.path.startsWith('/orders'),
   };
   // The tabs inside Manage (views/partials/admin-tabs.hbs).
   res.locals.adminTab = {
@@ -60,6 +61,7 @@ app.use('/items', requireLogin, require('./routes/items'));
 app.use('/sellers', requireLogin, require('./routes/sellers'));
 app.use('/cart', requireRole('Contractor'), require('./routes/cart'));
 app.use('/projects', requireRole('Contractor'), require('./routes/projects'));
+app.use('/orders', requireRole('Contractor'), require('./routes/orders'));
 // Admin tools (the Manage tab). loadAdminCounts: the numbers on the tabs
 // (/categories/manage gets them in the line above the categories router).
 app.use('/admin', requireRole('Admin'), loadAdminCounts);

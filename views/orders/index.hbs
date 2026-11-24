@@ -1,0 +1,45 @@
+<div class="eyebrow">Buyer</div>
+<h1 class="mb-1">My orders</h1>
+<p class="text-muted">Orders you placed on Project Flow, newest first. Past purchases from before are on the Dashboard.</p>
+
+{{#if message}}<div class="alert alert-success" role="status">{{message}}</div>{{/if}}
+
+{{#if orders.length}}
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr class="small text-uppercase text-nowrap">
+          <th class="ps-3">Order</th>
+          <th>Seller</th>
+          <th>Project</th>
+          <th class="text-end">Products</th>
+          <th class="text-end">Total</th>
+          <th class="pe-3">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each orders}}
+        <tr>
+          <td class="ps-3 text-nowrap"><a href="/orders/{{order_id}}" class="fw-medium">#{{order_id}}</a>
+            <div class="small text-muted">{{date ordered_at}}</div></td>
+          <td>{{seller_name}}{{#if isRental}} <span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{/if}}</td>
+          <td>{{proj_name}}</td>
+          <td class="text-end">{{line_count}}</td>
+          <td class="text-end fw-semibold">{{money total_value}}</td>
+          <td class="pe-3"><span class="badge rounded-pill badge-status fw-normal">{{order_status}}</span></td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{else}}
+<div class="card shadow-sm">
+  <div class="card-body text-center py-5">
+    <h2 class="h5">No orders yet</h2>
+    <p class="text-muted">Add offers to your cart and go to checkout.</p>
+    <a href="/categories" class="btn btn-primary">Browse categories</a>
+  </div>
+</div>
+{{/if}}

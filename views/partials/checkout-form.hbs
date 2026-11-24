@@ -1,0 +1,102 @@
+{{!-- The checkout form. A change to the project or a rental date asks the server for new totals
+      (POST /orders/checkout/preview, nothing is saved); "Place order" posts the form to /orders. --}}
+{{!-- hx-disinherit: the confirm question is only for placing the order, not for the live updates inside. --}}
+<form id="checkout" hx-post="/orders" hx-target="#checkout" hx-swap="outerHTML"
+      hx-confirm="Place {{plural groups.length "order" "orders"}} for {{money total}}?" hx-disinherit="hx-confirm">
+  {{#if error}}<div class="alert alert-danger" role="alert">{{error}}</div>{{/if}}
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white fw-semibold">Deliver to</div>
+        <div class="card-body">
+          {{#if projects.length}}
+          <label for="checkout-project" class="form-label small fw-semibold">Project</label>
+          <select id="checkout-project" name="proj_id" required class="form-select"
+                  hx-post="/orders/checkout/preview" hx-trigger="change" hx-target="#checkout" hx-swap="outerHTML">
+            <option value="">Choose the project these products are for...</option>
+            {{#each projects}}
+            <option value="{{proj_id}}" {{#if selected}}selected{{/if}}>{{proj_name}}{{#if proj_address}} &middot; {{proj_address}}{{else}} (no site address){{/if}}</option>
+            {{/each}}
+          </select>
+          <div class="form-text">The project's site address becomes the delivery address.</div>
+          {{else}}
+          <div class="alert alert-warning mb-0">
+            You have no open project. <a href="/projects">Add a project</a> with a site address first, then come back.
+          </div>
+          {{/if}}
+          <label for="checkout-note" class="form-label small fw-semibold mt-3">Note to the sellers (optional)</label>
+          <textarea id="checkout-note" name="note" rows="2" maxlength="{{noteMax}}" class="form-control"
+                    placeholder="e.g. Deliver before 10 am, the gate is on the north side.">{{note}}</textarea>
+        </div>
+      </div>
+
+      {{#each groups}}
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Order to {{seller_name}}</span>
+          <span class="small text-muted">{{plural items.length "product" "products"}}</span>
+        </div>
+        <ul class="list-group list-group-flush">
+          {{#each items}}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between gap-3">
+              <div>
+                <span class="fw-medium">{{item_name}}</span>
+                {{#if isRental}}<span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{/if}}
+                <div class="small text-muted">
+                  {{#if isRental}}{{plural quantity "machine" "machines"}} &times; {{money price}} / {{unit}} &times; {{basis}}
+                  {{else}}{{quantity}} {{unit}} &times; {{money price}}{{/if}}
+                </div>
+                {{#if problem}}<div class="small text-danger fw-semibold">{{problem}}</div>{{/if}}
+              </div>
+              <div class="fw-semibold text-nowrap">{{money lineTotal}}</div>
+            </div>
+            {{#if isRental}}
+            <div class="row g-2 mt-1">
+              <div class="col-sm-4">
+                <label for="start-{{cart_item_id}}" class="form-label small mb-0">Start</label>
+                <input id="start-{{cart_item_id}}" type="date" name="start_{{cart_item_id}}" value="{{period.startText}}"
+                       min="{{period.min}}" required class="form-control form-control-sm{{#if period.error}} is-invalid{{/if}}"
+                       hx-post="/orders/checkout/preview" hx-trigger="change" hx-target="#checkout" hx-swap="outerHTML">
+              </div>
+              <div class="col-sm-4">
+                <label for="end-{{cart_item_id}}" class="form-label small mb-0">End (included)</label>
+                <input id="end-{{cart_item_id}}" type="date" name="end_{{cart_item_id}}" value="{{period.endText}}"
+                       min="{{period.min}}" required class="form-control form-control-sm{{#if period.error}} is-invalid{{/if}}"
+                       hx-post="/orders/checkout/preview" hx-trigger="change" hx-target="#checkout" hx-swap="outerHTML">
+              </div>
+              {{#if period.error}}<div class="col-12 small text-danger">{{period.error}}</div>{{/if}}
+            </div>
+            {{/if}}
+          </li>
+          {{/each}}
+        </ul>
+        <div class="card-footer bg-white text-end small">
+          Order total: <span class="fw-semibold">{{money subtotal}}</span>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm summary-card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Summary</h2>
+          {{#each groups}}
+          <div class="d-flex justify-content-between small mb-1"><span>{{seller_name}}</span><span>{{money subtotal}}</span></div>
+          {{/each}}
+          <div class="d-flex justify-content-between align-items-baseline border-top pt-3 mt-2 mb-3">
+            <span class="fw-semibold">Total</span><span class="fs-4 fw-semibold">{{money total}}</span>
+          </div>
+          {{!-- The total the Contractor sees; the server checks that it is still the same when ordering. --}}
+          <input type="hidden" name="expected_total" value="{{totalCents}}">
+          <button type="submit" class="btn btn-primary w-100 mb-2" {{#unless projects.length}}disabled{{/unless}}>
+            Place {{plural groups.length "order" "orders"}}
+          </button>
+          <a href="/cart" class="btn btn-link btn-sm w-100">Back to cart</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

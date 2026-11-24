@@ -1,0 +1,57 @@
+<div class="eyebrow"><a href="/orders">My orders</a></div>
+<h1 class="mb-1">Order #{{order.order_id}}</h1>
+<p class="text-muted mb-4">
+  <span class="badge rounded-pill badge-status fw-normal">{{order.order_status}}</span>
+  Ordered {{date order.ordered_at}} from <a href="/sellers/{{order.seller_id}}">{{order.seller_name}}</a>
+</p>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr class="small text-uppercase text-nowrap">
+              <th class="ps-3">Product</th>
+              <th class="text-end">Quantity</th>
+              <th class="text-end">Total</th>
+              <th class="pe-3">Seller's answer</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each lines}}
+            <tr>
+              <td class="ps-3">
+                <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
+                {{#if isRental}}<div class="small text-muted">{{date rent_start}} - {{date rent_end}} ({{basis}})</div>{{/if}}
+                <div class="small text-muted">{{money unit_price}} / {{unit}}</div>
+              </td>
+              <td class="text-end text-nowrap">{{#if isRental}}{{plural quantity "machine" "machines"}}{{else}}{{quantity}} <span class="small text-muted">{{unit}}</span>{{/if}}</td>
+              <td class="text-end fw-semibold text-nowrap">{{money lineTotal}}</td>
+              <td class="pe-3">
+                <span class="badge rounded-pill badge-status fw-normal">{{line_status}}</span>
+                {{#if decline_reason}}<div class="small text-muted">{{decline_reason}}</div>{{/if}}
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body small">
+        <div class="d-flex justify-content-between align-items-baseline mb-3">
+          <span class="fw-semibold">Total</span><span class="fs-4 fw-semibold">{{money order.total_value}}</span>
+        </div>
+        <dl class="mb-0">
+          <dt class="fw-normal text-muted">Project</dt><dd>{{order.proj_name}}</dd>
+          <dt class="fw-normal text-muted">Delivery address</dt><dd>{{order.delivery_address}}</dd>
+          {{#if order.planned_date}}<dt class="fw-normal text-muted">Planned delivery</dt><dd>{{date order.planned_date}}</dd>{{/if}}
+          {{#if order.note}}<dt class="fw-normal text-muted">Your note</dt><dd class="mb-0">{{order.note}}</dd>{{/if}}
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>

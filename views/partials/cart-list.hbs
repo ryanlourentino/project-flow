@@ -27,7 +27,8 @@
               <tr>
                 <td class="ps-3">
                   <a href="/items/{{item_id}}" class="fw-medium">{{item_name}}</a>
-                  <div class="small text-muted">Min. order {{min_order}} &middot; {{stock}} in stock</div>
+                  {{#if isRental}}<span class="badge rounded-pill badge-rental fw-normal">Rental</span>{{/if}}
+                  <div class="small text-muted">Min. order {{min_order}} &middot; {{stock}} {{#if isRental}}available{{else}}in stock{{/if}}</div>
                   {{#if problem}}<div class="small text-danger fw-semibold">{{problem}}</div>{{/if}}
                 </td>
                 <td class="text-end text-nowrap">{{money price}} <span class="small text-muted">/ {{unit}}</span></td>
@@ -35,8 +36,12 @@
                   <input type="number" name="quantity" value="{{quantity}}" min="{{min_order}}" max="{{stock}}" step="1"
                          class="form-control form-control-sm mx-auto" style="width: 6rem" aria-label="Quantity of {{item_name}}"
                          hx-put="/cart/{{cart_item_id}}" hx-trigger="change">
+                  {{#if isRental}}<div class="small text-muted">{{plural quantity "machine" "machines"}}</div>{{/if}}
                 </td>
-                <td class="text-end text-nowrap fw-semibold">{{money lineTotal}}</td>
+                <td class="text-end text-nowrap">
+                  <span class="fw-semibold">{{money lineTotal}}</span>
+                  {{#if isRental}}<div class="small text-muted">for {{basis}}</div>{{/if}}
+                </td>
                 <td class="pe-3 text-end">
                   <button type="button" class="btn btn-sm btn-outline-danger" hx-delete="/cart/{{cart_item_id}}"
                           aria-label="Remove {{item_name}}">Remove</button>
@@ -66,10 +71,15 @@
           <div class="d-flex justify-content-between align-items-baseline border-top pt-3 mb-3">
             <span class="fw-semibold">Total</span><span class="fs-4 fw-semibold">{{money total}}</span>
           </div>
+          {{#if hasRentals}}
+          <p class="small text-muted">Rentals are counted for 1 day here. You choose the rental dates at checkout.</p>
+          {{/if}}
           {{#if hasProblems}}
           <div class="alert alert-warning small py-2">Fix the items marked in red before ordering.</div>
+          <button type="button" class="btn btn-primary w-100 mb-2" disabled>Continue to checkout</button>
+          {{else}}
+          <a href="/orders/checkout" class="btn btn-primary w-100 mb-2">Continue to checkout</a>
           {{/if}}
-          <button type="button" class="btn btn-primary w-100 mb-2" disabled title="Ordering comes in the next assignment">Place order (coming soon)</button>
           <button type="button" class="btn btn-link btn-sm text-danger w-100"
                   hx-delete="/cart" hx-target="#cart" hx-swap="outerHTML"
                   hx-confirm="Remove everything from your cart?">Remove all</button>

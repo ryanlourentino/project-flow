@@ -148,3 +148,6 @@ html { scrollbar-gutter: stable; }
 .stat-value { font-family: "Bebas Neue", Impact, "Arial Narrow", sans-serif; font-size: 2.6rem; line-height: 1; }
 .notification-dot { flex: 0 0 auto; width: 0.5rem; height: 0.5rem; margin-top: 0.4rem; border-radius: 50%; background: var(--pf-gray-200); }
 .notification-dot.unread { background: var(--pf-black); }
+
+/* ---------- Orders ---------- */
+.badge-status { background-color: #ffffff; color: var(--pf-black); border: 1px solid var(--pf-gray-500); }

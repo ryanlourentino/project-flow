@@ -2,67 +2,13 @@
 // app.js only lets Contractors in, so req.user is always the buyer here.
 const express = require('express');
 const db = require('../db');
+const { countCart, loadCartRows, groupCart } = require('../lib/cart');
 
 const router = express.Router();
 const QUANTITY_MAX = 1000000;
 
-// Money is added up in cents (whole numbers), so 0.1 + 0.2 never becomes 0.30000000000000004.
-const toCents = (price) => Math.round(Number(price) * 100);
-
-// How many different offers are in the buyer's cart (the number on the menu badge).
-async function countCart(buyerId) {
-  const [[{ line_count: lineCount }]] = await db.execute('SELECT COUNT(*) AS line_count FROM CartItems WHERE buyer_id = ?', [buyerId]);
-  return Number(lineCount);
-}
-
-// What is wrong with a cart line right now (the seller may have changed stock or terms since).
-function problemFor(row) {
-  if (row.verification_status === 'Rejected') return 'This seller is not available right now. Remove it from your cart.';
-  if (row.stock === 0) return 'Sold out. Remove it or wait for new stock.';
-  if (row.quantity > row.stock) return `Only ${row.stock} in stock.`;
-  if (row.quantity < row.min_order) return `Minimum order is ${row.min_order}.`;
-  return null;
-}
-
-// READ: the buyer's cart, grouped by seller (one future order per seller), with totals.
-async function loadCart(buyerId) {
-  const [rows] = await db.execute(
-    `SELECT ci.cart_item_id, ci.quantity,
-            l.listing_id, l.price, l.stock, l.min_order, l.lead_days,
-            i.item_id, i.item_name, i.unit,
-            u.user_id AS seller_id, u.company_name AS seller_name, s.verification_status
-       FROM CartItems ci
-       JOIN Listings l ON l.listing_id = ci.listing_id
-       JOIN Items i    ON i.item_id = l.item_id
-       JOIN Users u    ON u.user_id = l.seller_id
-       LEFT JOIN Suppliers s ON s.user_id = l.seller_id -- a rejected seller's line gets a problem
-      WHERE ci.buyer_id = ?
-      ORDER BY u.company_name, i.item_name`,
-    [buyerId]
-  );
-
-  const groups = [];
-  let totalCents = 0;
-  for (const row of rows) {
-    const lineCents = toCents(row.price) * row.quantity;
-    totalCents += lineCents;
-    let group = groups[groups.length - 1];
-    if (!group || group.seller_id !== row.seller_id) {
-      group = { seller_id: row.seller_id, seller_name: row.seller_name, items: [], subtotalCents: 0, maxLeadDays: 0 };
-      groups.push(group);
-    }
-    group.items.push({ ...row, lineTotal: lineCents / 100, problem: problemFor(row) });
-    group.subtotalCents += lineCents;
-    group.maxLeadDays = Math.max(group.maxLeadDays, row.lead_days);
-  }
-
-  return {
-    groups: groups.map((g) => ({ ...g, subtotal: g.subtotalCents / 100 })),
-    lineCount: rows.length,
-    total: totalCents / 100,
-    hasProblems: groups.some((g) => g.items.some((item) => item.problem)),
-  };
-}
+// READ: the buyer's cart, grouped by seller (one order per seller), with totals.
+const loadCart = async (buyerId) => groupCart(await loadCartRows(db, buyerId));
 
 // Send the cart fragment and, out of band, the new number for the menu badge.
 async function renderCart(req, res, opts = {}) {
@@ -104,7 +50,7 @@ router.post('/', safe(async (req, res) => {
   const reply = async (opts) => res.render('partials/cart-added', {
     layout: false,
     ...opts,
-    cartCount: await countCart(req.user.user_id),
+    cartCount: await countCart(db, req.user.user_id),
   });
 
   const listingId = Number(req.body.listing_id);
