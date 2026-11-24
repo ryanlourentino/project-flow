@@ -40,3 +40,8 @@ ALTER TABLE OrderItems
   ADD COLUMN rent_end DATE NULL AFTER rent_start,
   ADD CONSTRAINT fk_order_items_listing FOREIGN KEY (listing_id) REFERENCES Listings (listing_id) ON DELETE SET NULL,
   ADD CONSTRAINT chk_rent_period CHECK (rent_end IS NULL OR rent_start IS NULL OR rent_end >= rent_start);
+
+-- Order numbers for new orders continue right after the historical ones. (Loading the history with one big
+-- INSERT ... SELECT made MySQL reserve numbers in blocks, so the next number would jump to 65536.)
+-- AUTO_INCREMENT = 1 means "the lowest number that is still free after the existing rows".
+ALTER TABLE PurchaseOrders AUTO_INCREMENT = 1;

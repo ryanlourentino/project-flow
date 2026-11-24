@@ -78,7 +78,9 @@ erDiagram
         int cart_item_id PK "MVP - Cart Line ID"
         int buyer_id FK "MVP - Contractor (Users)"
         int listing_id FK "MVP - Offer in the Cart"
-        int quantity "MVP - Quantity to Order"
+        int quantity "MVP - Quantity to Order (Rentals: Machines)"
+        date rent_start "MVP - Rental Start Date"
+        date rent_end "MVP - Rental End Date (Included)"
         date added_at "MVP - Added On"
     }
 
